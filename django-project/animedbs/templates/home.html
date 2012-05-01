@@ -3,8 +3,12 @@
 {% block header %}<h1>Anime Database Information System</h1>{% endblock %}
 {% block content %}
 <form action="." method="post">{% csrf_token %}
-    <p><label for="id_email">Email:</label>
-    <input id="id_email" type="text" name="email" maxlength="256" />
+    {{ form.non_field_errors }}
+    <div class="fieldWrapper">
+        {{ form.email.errors }}
+        <label for="id_email">Email:</label>
+        {{ form.email }}
+    </div>
     <input type="submit" value="Login" /></p>
 </form>
 {% endblock %}
