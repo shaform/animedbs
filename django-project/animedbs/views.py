@@ -5,10 +5,28 @@ from django.shortcuts import redirect
 from django.template import RequestContext
 from animedbs.forms import LoginForm
 
+
+#### -- Home Page -- ####
 def index(request):
-    # msg = "Hello %s"
-    # return HttpResponse(msg)
-    pass
+    msg = 'Hello %d' % request.session['user_id']
+    return HttpResponse(msg)
+
+def logout(request):
+    for key in request.session.keys():
+        del request.session[key]
+    return redirect('/')
+
+def register(request, email):
+    cursor = connection.cursor()
+
+    cursor.execute('INSERT INTO `USER` (Email, Nickname, Gender)'
+            + 'VALUES (%s, %s, %s);', [email, 'Nickname', 'other'])
+    transaction.commit_unless_managed()
+
+    cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
+    request.session['user_id'] = cursor.fetchone()[0]
+
+    return redirect('/profile')
 
 def login(request):
     form = LoginForm()
@@ -16,28 +34,47 @@ def login(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             cursor = connection.cursor()
+
             # check if account exists
             email = form.cleaned_data['email']
-            cursor.execute("SELECT `Id` FROM `USER` WHERE Email = %s", [email])
+            cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
             row = cursor.fetchone()
+
             if row is None:
-                return HttpResponse("No this man %s" % email)
-            # cursor.execute("INSERT IGNORE INTO `users`\n\"")
+                return register(request, email)
             else:
-                return HttpResponse("Yes this man")
-                # request.session.
-            # transaction.commit_unless_managed()
-        else:
-            return render_to_response('home.html', {
-                'form' : form,
-                }, context_instance=RequestContext(request))
-    else:
-        return render_to_response('home.html', {
-            'form' : form,
-            }, context_instance=RequestContext(request))
+                request.session['user_id'] = row[0]
+                return index(request)
+
+    return render_to_response('home.html', {
+        'form' : form,
+        }, context_instance=RequestContext(request))
 
 def home(request):
-    if request.session.get('user_id', 0) == 0:
+    if 'user_id' not in request.session:
         return login(request)
     else:
         return index(request)
+
+
+
+## -- Users -- ##
+
+def profile(request):
+    return HttpResponse()
+    pass
+
+def users(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT Id, Email, Nickname Gender'
+            + 'FROM `USER`;')
+
+    return render_to_response('profile.html', {
+        'form' : form,
+        }, context_instance=RequestContext(request))
+
+
+## -- Search -- ##
+## -- Animes -- ##
+## -- Songs -- ##
+
