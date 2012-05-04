@@ -8,8 +8,8 @@ from animedbs.forms import LoginForm
 
 #### -- Home Page -- ####
 def index(request):
-    msg = 'Hello %d' % request.session['user_id']
-    return HttpResponse(msg)
+    return render_to_response('index.html',
+            context_instance=RequestContext(request))
 
 def logout(request):
     for key in request.session.keys():
@@ -66,11 +66,11 @@ def profile(request):
 
 def users(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT Id, Email, Nickname Gender'
-            + 'FROM `USER`;')
+    cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
+            + ' FROM `USER`;')
 
-    return render_to_response('profile.html', {
-        'form' : form,
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
 

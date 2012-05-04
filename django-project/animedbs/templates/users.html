@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block pagetitle %}Welcome{% endblock %}
+{% block header %}<h1>Anime Database Information System</h1>{% endblock %}
+{% block content %}
+<table>
+    <tbody>
+        {% for row in user_list %}
+        <tr>
+            {% for col in row %}
+            <td>{{ col }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
