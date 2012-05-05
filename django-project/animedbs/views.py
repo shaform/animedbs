@@ -102,6 +102,45 @@ def users(request):
 
 
 ## -- Search -- ##
+def search(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
+            + ' FROM `USER`;')
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
 ## -- Animes -- ##
+def animes(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT *'
+            + ' FROM `ANIME`;')
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
 ## -- Songs -- ##
+def songs(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT *'
+            + ' FROM `SONG`;')
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
+
+## -- Authors -- ##
+def authors(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT `Id`, `Name`, `Description`'
+            + ' FROM `AUTHOR`;')
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
+
+## -- Seiyus -- ##
+def seiyus(request):
+    cursor = connection.cursor()
+    cursor.execute('SELECT *'
+            + ' FROM `SEIYU`;')
+    return render_to_response('users.html', {
+        'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
 
