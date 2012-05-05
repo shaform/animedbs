@@ -5,4 +5,5 @@ urlpatterns = patterns('',
         url(r'^logout$', 'animedbs.views.logout'),
         url(r'^users$', 'animedbs.views.users'),
         url(r'^profile$', 'animedbs.views.profile'),
+        #url(r'^authors$', 'animedbs.views.authors'),
 )
