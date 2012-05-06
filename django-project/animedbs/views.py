@@ -6,6 +6,27 @@ from django.template import RequestContext
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
 
+def login_required(function):
+    def _dec(view_func):
+        def _view(request, *args, **kwargs):
+            if 'user_id' not in request.session:
+                return redirect('/')
+            else:
+                return view_func(request, *args, **kwargs)
+
+        _view.__name__ = view_func.__name__
+        _view.__dict__ = view_func.__dict__
+        _view.__doc__ = view_func.__doc__
+
+        return _view
+
+    if function is None:
+        return _dec
+    else:
+        return _dec(function)
+
+
+
 
 #### -- Home Page -- ####
 def index(request):
@@ -61,6 +82,7 @@ def home(request):
 
 ## -- Users -- ##
 
+@login_required
 def profile(request):
     if 'user_id' not in request.session:
         return redirect('/')
@@ -92,6 +114,7 @@ def profile(request):
         'form' : form,
         }, context_instance=RequestContext(request))
 
+@login_required
 def users(request):
     cursor = connection.cursor()
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
@@ -102,6 +125,7 @@ def users(request):
 
 
 ## -- Search -- ##
+@login_required
 def search(request):
     cursor = connection.cursor()
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
@@ -110,6 +134,7 @@ def search(request):
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 ## -- Animes -- ##
+@login_required
 def animes(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
@@ -118,6 +143,7 @@ def animes(request):
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 ## -- Songs -- ##
+@login_required
 def songs(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
@@ -127,6 +153,7 @@ def songs(request):
         }, context_instance=RequestContext(request))
 
 ## -- Authors -- ##
+@login_required
 def authors(request):
     cursor = connection.cursor()
     cursor.execute('SELECT `Id`, `Name`, `Description`'
@@ -136,6 +163,7 @@ def authors(request):
         }, context_instance=RequestContext(request))
 
 ## -- Seiyus -- ##
+@login_required
 def seiyus(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
