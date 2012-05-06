@@ -28,11 +28,13 @@
                     <a class="brand" href="/">AI System</a>
                     <div class="nav-collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/">Home</a></li>
-                            <li><a href="anime">Animes</a></li>
-                            <li><a href="song">Songs</a></li>
-                            <li><a href="seiyu">Seiyus</a></li>
-                            <li><a href="author">Authors</a></li>
+                            <li class="active"><a href="{% url animedbs.views.home %}">Home</a></li>
+                            <li><a href="{% url animedbs.views.search %}">Search</a></li>
+                            <li><a href="{% url animedbs.views.animes %}">Animes</a></li>
+                            <li><a href="{% url animedbs.views.songs %}">Songs</a></li>
+                            <li><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
+                            <li><a href="{% url animedbs.views.authors %}">Authors</a></li>
+                            <li><a href="{% url animedbs.views.users %}">Users</a></li>
                         </ul>
                     </div><!--/.nav-collapse -->
                     <div class="btn-group pull-right">
@@ -41,9 +43,9 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a href="profile">Profile</a></li>
+                            <li><a href="{% url animedbs.views.profile %}">Profile</a></li>
                             <li class="divider"></li>
-                            <li><a href="logout">Sign Out</a></li>
+                            <li><a href="{% url animedbs.views.logout %}">Sign Out</a></li>
                         </ul>
                     </div>
                 </div>
