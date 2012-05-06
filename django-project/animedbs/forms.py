@@ -11,3 +11,7 @@ class ProfileForm(forms.Form):
         ('female', 'Female'),
         ('other', 'Other'),
         ))
+
+class SearchForm(forms.Form):
+    keyword = forms.CharField(max_length=30)
+    

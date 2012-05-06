@@ -28,15 +28,15 @@
                     <a class="brand" href="/">AI System</a>
                     <div class="nav-collapse">
                         <ul class="nav">
-                            <li class="active"><a href="{% url animedbs.views.home %}">Home</a></li>
-                            <li><a href="{% url animedbs.views.search %}">Search</a></li>
-                            <li><a href="{% url animedbs.views.animes %}">Animes</a></li>
-                            <li><a href="{% url animedbs.views.songs %}">Songs</a></li>
-                            <li><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
-                            <li><a href="{% url animedbs.views.authors %}">Authors</a></li>
-                            <li><a href="{% url animedbs.views.users %}">Users</a></li>
+                            <li class="{%block home %}{% endblock %}"><a href="{% url animedbs.views.home %}">Home</a></li>
+                            <li class="{%block animes %}{% endblock %}"><a href="{% url animedbs.views.animes %}">Animes</a></li>
+                            <li class="{%block songs %}{% endblock %}"><a href="{% url animedbs.views.songs %}">Songs</a></li>
+                            <li class="{%block seiyus %}{% endblock %}"><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
+                            <li class="{%block authors %}{% endblock %}"><a href="{% url animedbs.views.authors %}">Authors</a></li>
+                            <li class="{%block users %}{% endblock %}"><a href="{% url animedbs.views.users %}">Users</a></li>
                         </ul>
                     </div><!--/.nav-collapse -->
+                    
                     <div class="btn-group pull-right">
                         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                             <i class="icon-user"></i> Username
@@ -48,13 +48,19 @@
                             <li><a href="{% url animedbs.views.logout %}">Sign Out</a></li>
                         </ul>
                     </div>
+
+                    <form class="navbar-search pull-right" action="{% url animedbs.views.search %}" method="get">
+                        {% csrf_token %}
+                        <i class="icon-search icon-white"></i>
+                        <input type="text" name="keyword" class="search-query" placeholder="Search">
+                    </form>
+                    
                 </div>
             </div>
         </div>
         
 
         <header>{%block header %}{% endblock %}</header>
-        <nav></nav>
         
         
         <div id="content">
@@ -63,6 +69,7 @@
         
         
         <footer>
+            <hr>
             <p>&copy; 2012</p>
         </footer>
         

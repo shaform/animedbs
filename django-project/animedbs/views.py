@@ -114,6 +114,7 @@ def profile(request):
         'form' : form,
         }, context_instance=RequestContext(request))
 
+
 @login_required
 def users(request):
     cursor = connection.cursor()
@@ -130,9 +131,13 @@ def search(request):
     cursor = connection.cursor()
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
             + ' FROM `USER`;')
+    keyword = request.GET['keyword']
     return render_to_response('users.html', {
         'user_list' : cursor.fetchall(),
-        }, context_instance=RequestContext(request))
+        'keyword': keyword,
+    }, context_instance=RequestContext(request))
+
+
 ## -- Animes -- ##
 @login_required
 def animes(request):
@@ -142,6 +147,8 @@ def animes(request):
     return render_to_response('users.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
+
+
 ## -- Songs -- ##
 @login_required
 def songs(request):
@@ -152,6 +159,7 @@ def songs(request):
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
+
 ## -- Authors -- ##
 @login_required
 def authors(request):
@@ -161,6 +169,7 @@ def authors(request):
     return render_to_response('users.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
+
 
 ## -- Seiyus -- ##
 @login_required
