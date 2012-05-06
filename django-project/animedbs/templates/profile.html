@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 {% block pagetitle %}Welcome{% endblock %}
 {% block content %}
-<form action="/profile" method="post">{% csrf_token %}
+<form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Update" /></p>
 </form>
