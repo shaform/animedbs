@@ -1,0 +1,42 @@
+{% extends 'main.html' %}
+{% block users %}active{% endblock %}
+{% block pagetitle %}Welcome{% endblock %}
+{% block header %}<h1>{{ user.1 }}</h1>{% endblock %}
+{% block content %}
+<table>
+    <tbody>
+        <tr>
+            <td>Id</td>
+            <td>{{ user.0 }}</td>
+        </tr>
+        <tr>
+            <td>Nickname</td>
+            <td>{{ user.2 }}</td>
+        </tr>
+        <tr>
+            <td>Gender</td>
+            <td>{{ user.3 }}</td>
+        </tr>
+</table>
+<h2>Comments of {{ user.2 }}</h2>
+<table>
+    <tbody>
+        {% for cmt in comments %}
+        <tr>
+            <td>On {{ cmt.season }}</td>
+        </tr>
+        <tr>
+            <td>-- season {{ cmt.snum }} of {{ cmt.anime }}</td>
+        </tr>
+        <tr>
+            <td>Rated {{ cmt.rating }}</td>
+        </tr>
+        <tr>
+            <td>At {{ cmt.datetime }}</td>
+        </tr>
+        <tr>
+            <td>{{ cmt.text }}</td>
+        </tr>
+        {% endfor %}
+</table>
+{% endblock %}

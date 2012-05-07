@@ -7,6 +7,7 @@
 
         <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css" />
         <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-responsive.min.css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css" />
         <style type="text/css">
             body {
                 padding-top: 60px;
@@ -39,7 +40,7 @@
                     
                     <div class="btn-group pull-right">
                         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            <i class="icon-user"></i> Username
+                            <i class="icon-user"></i> {{ username|default:"Username" }}
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">

@@ -1,5 +1,6 @@
 from django.db import connection, transaction
 from django.http import HttpResponse
+from django.http import Http404
 from django.shortcuts import render_to_response
 from django.shortcuts import redirect
 from django.template import RequestContext
@@ -68,7 +69,7 @@ def login(request):
                 request.session['user_id'] = row[0]
                 return index(request)
 
-    return render_to_response('home.html', {
+    return render_to_response('login.html', {
         'form' : form,
         }, context_instance=RequestContext(request))
 
@@ -111,6 +112,7 @@ def profile(request):
 
     return render_to_response('profile.html', {
         'email' : email,
+        'username' : row[1],
         'form' : form,
         }, context_instance=RequestContext(request))
 
@@ -124,6 +126,44 @@ def users(request):
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
+@login_required
+def user(request, user_id):
+    cursor = connection.cursor()
+    cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
+            + ' FROM `USER` WHERE `Id` = %s;', [user_id])
+    row = cursor.fetchone()
+
+    if row is None:
+        raise Http404
+
+    cursor.execute('SELECT `Commentee_anime`, `Commentee_season`,'
+            + ' `Rating`, `Text`, `Datetime`'
+            + ' FROM `COMMENTS_ON` WHERE `Commenter` = %s;', [user_id])
+    rows = cursor.fetchall()
+    comments = []
+
+    for cmt in rows:
+        cursor.execute('SELECT `Title`'
+                + ' FROM `ANIME` WHERE `Id` = %s;', [cmt[0]])
+        anime = cursor.fetchone()[0]
+        cursor.execute('SELECT `Full_name`'
+                + ' FROM `SEASON` WHERE `Part_of` = %s'
+                + ' AND `Series_num` = %s;', [cmt[0], cmt[1]])
+        season = cursor.fetchone()[0]
+        comments.append({
+            'anime' : anime,
+            'season' : season,
+            'snum' : cmt[1],
+            'rating' : cmt[2],
+            'text' : cmt[3],
+            'datetime' : cmt[4],
+            })
+
+    return render_to_response('user.html', {
+        'user' : row,
+        'comments' : comments,
+        }, context_instance=RequestContext(request))
+
 
 ## -- Search -- ##
 @login_required
@@ -132,7 +172,7 @@ def search(request):
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
             + ' FROM `USER`;')
     keyword = request.GET['keyword']
-    return render_to_response('users.html', {
+    return render_to_response('temp.html', {
         'user_list' : cursor.fetchall(),
         'keyword': keyword,
     }, context_instance=RequestContext(request))
@@ -144,7 +184,7 @@ def animes(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
             + ' FROM `ANIME`;')
-    return render_to_response('users.html', {
+    return render_to_response('temp.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
@@ -155,7 +195,7 @@ def songs(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
             + ' FROM `SONG`;')
-    return render_to_response('users.html', {
+    return render_to_response('temp.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
@@ -166,7 +206,7 @@ def authors(request):
     cursor = connection.cursor()
     cursor.execute('SELECT `Id`, `Name`, `Description`'
             + ' FROM `AUTHOR`;')
-    return render_to_response('users.html', {
+    return render_to_response('temp.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
@@ -177,7 +217,7 @@ def seiyus(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
             + ' FROM `SEIYU`;')
-    return render_to_response('users.html', {
+    return render_to_response('temp.html', {
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 

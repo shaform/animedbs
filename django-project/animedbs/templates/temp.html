@@ -1,0 +1,19 @@
+{% extends 'main.html' %}
+{% block users %}active{% endblock %}
+{% block pagetitle %}Welcome{% endblock %}
+{% block content %}
+{% if keyword %} <h2>You want to search "{{ keyword }}"</h2> {% endif %}
+<table>
+    <thead>
+    </thead>
+    <tbody>
+        {% for row in user_list %}
+        <tr>
+            {% for col in row %}
+            <td>{{ col }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
