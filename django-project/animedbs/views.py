@@ -11,7 +11,7 @@ def login_required(function):
     def _dec(view_func):
         def _view(request, *args, **kwargs):
             if 'user_id' not in request.session:
-                return redirect('/')
+                return redirect('animedbs.views.home')
             else:
                 return view_func(request, *args, **kwargs)
 
@@ -37,7 +37,7 @@ def index(request):
 def logout(request):
     for key in request.session.keys():
         del request.session[key]
-    return redirect('/')
+    return redirect('animedbs.views.home')
 
 def register(request, email):
     cursor = connection.cursor()
@@ -49,7 +49,7 @@ def register(request, email):
     cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
     request.session['user_id'] = cursor.fetchone()[0]
 
-    return redirect('/profile')
+    return redirect('animedbs.views.profile')
 
 def login(request):
     form = LoginForm()
@@ -86,7 +86,7 @@ def home(request):
 @login_required
 def profile(request):
     if 'user_id' not in request.session:
-        return redirect('/')
+        return redirect('animedbs.views.home')
 
     cursor = connection.cursor()
 
@@ -108,7 +108,7 @@ def profile(request):
             cursor.execute('UPDATE `USER` SET `Nickname` = %s, `Gender` = %s'
                     + ' WHERE `Id` = %s;', [nickname, gender, user_id])
             transaction.commit_unless_managed()
-            return redirect('/profile')
+            return redirect('animedbs.views.profile')
 
     return render_to_response('profile.html', {
         'email' : email,
