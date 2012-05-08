@@ -1,3 +1,4 @@
+import json
 from django.db import connection, transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -133,8 +134,10 @@ def search(request):
             + ' FROM `USER`;')
     keyword = request.GET['keyword']
     return render_to_response('users.html', {
-        'user_list' : cursor.fetchall(),
+        #'user_list' : cursor.fetchall(),
         'keyword': keyword,
+        'tbl': json.dumps(cursor.fetchall()),
+        'cols': [('number','ID'),('string', 'Email'),('string', 'Name'),('string', 'Gender')],
     }, context_instance=RequestContext(request))
 
 
