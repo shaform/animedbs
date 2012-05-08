@@ -95,6 +95,7 @@ def profile(request):
             + ' FROM `USER` WHERE `Id` = %s', [user_id])
     row = cursor.fetchone()
     email = row[0]
+    nickname = row[1]
 
     form = ProfileForm(initial={
         'nickname' : row[1],
@@ -136,6 +137,7 @@ def profile(request):
     return render_to_response('profile.html', {
         'email' : email,
         'form' : form,
+        'username' : nickname,
         'comments' : comments,
         }, context_instance=RequestContext(request))
 
