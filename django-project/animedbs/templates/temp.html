@@ -1,10 +1,16 @@
-{% extends 'main.html' %}
+{% extends 'base.html' %}
 {% block users %}active{% endblock %}
-{% block pagetitle %}Welcome{% endblock %}
+{% block pagetitle %}Temp{% endblock %}
+{% block header %}<h1>Temp</h1>{% endblock %}
 {% block content %}
 {% if keyword %} <h2>You want to search "{{ keyword }}"</h2> {% endif %}
 <table>
     <thead>
+        <tr>
+        {% for col in table_header %}
+            <td>{{ col }}</td>
+        {% endfor %}
+        </tr>
     </thead>
     <tbody>
         {% for row in user_list %}

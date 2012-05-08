@@ -216,10 +216,24 @@ def animes(request):
 @login_required
 def songs(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT *'
-            + ' FROM `SONG`;')
+    cursor.execute('SELECT `Id`, `Title`, `Singed_by`,'
+            + '`Featured_in_aid`, `Featured_in_snum`,'
+            + ' `Type` FROM `SONG`;')
+    rows = cursor.fetchall()
+    songs = []
+    for song in rows:
+        cursor.execute('SELECT `Title`'
+                + ' FROM `ANIME` WHERE `Id` = %s;', [song[3]])
+        anime = cursor.fetchone()[0]
+        cursor.execute('SELECT `Name`'
+                + ' FROM `SEIYU` WHERE `Id` = %s;', [song[2]])
+        seiyu = cursor.fetchone()[0]
+        songs.append([song[0], song[1], seiyu, anime, song[4], song[5]])
+    header = ['Id', 'Title', 'Sing_by',
+            'Featured anime', 'Featured season', 'Type']
     return render_to_response('temp.html', {
-        'user_list' : cursor.fetchall(),
+        'user_list' : songs,
+        'table_header' : header,
         }, context_instance=RequestContext(request))
 
 

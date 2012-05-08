@@ -1,8 +1,7 @@
-{% extends 'base.html' %}
-{% block home %}active{% endblock %}
-{% block pagetitle %}Welcome{% endblock %}
-{% block header %}<h1>Anime Database Information System</h1>{% endblock %}
-{% block content %}
+{% extends 'html_base.html' %}
+{% block htmltitle %}Welcome{% endblock %}
+{% block bodyblock %}
+<h1>Anime Database Information System</h1>
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Login" /></p>

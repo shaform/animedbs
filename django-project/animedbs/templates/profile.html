@@ -1,5 +1,6 @@
-{% extends 'main.html' %}
+{% extends 'base.html' %}
 {% block pagetitle %}Welcome{% endblock %}
+{% block header %}<h1>Profile</h1>{% endblock %}
 {% block content %}
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}

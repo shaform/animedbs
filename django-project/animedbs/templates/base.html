@@ -1,79 +1,63 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>{%block pagetitle %}{% endblock %}
-            - Anime Database Information System</title>
+{% extends 'html_base.html' %}
+{% block htmltitle %}
+{% block pagetitle %}{% endblock %}
+- Anime Database Information System
+{% endblock %}
+{% block bodyblock %}
+{% block nav %}
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container-fluid">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="/">AI System</a>
+            <div class="nav-collapse">
+                <ul class="nav">
+                    <li class="{%block animes %}{% endblock %}"><a href="{% url animedbs.views.animes %}">Animes</a></li>
+                    <li class="{%block songs %}{% endblock %}"><a href="{% url animedbs.views.songs %}">Songs</a></li>
+                    <li class="{%block seiyus %}{% endblock %}"><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
+                    <li class="{%block authors %}{% endblock %}"><a href="{% url animedbs.views.authors %}">Authors</a></li>
+                    <li class="{%block users %}{% endblock %}"><a href="{% url animedbs.views.users %}">Users</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
 
-        <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap.min.css" />
-        <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-responsive.min.css" />
-        <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css" />
-        <style type="text/css">
-            body {
-                padding-top: 60px;
-                padding-bottom: 40px;
-            }
-        </style>
-    </head>
-    
-    <body>
-        
-        <div class="navbar navbar-fixed-top">
-            <div class="navbar-inner">
-                <div class="container-fluid">
-                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                    <a class="brand" href="/">AI System</a>
-                    <div class="nav-collapse">
-                        <ul class="nav">
-                            <li class="{%block animes %}{% endblock %}"><a href="{% url animedbs.views.animes %}">Animes</a></li>
-                            <li class="{%block songs %}{% endblock %}"><a href="{% url animedbs.views.songs %}">Songs</a></li>
-                            <li class="{%block seiyus %}{% endblock %}"><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
-                            <li class="{%block authors %}{% endblock %}"><a href="{% url animedbs.views.authors %}">Authors</a></li>
-                            <li class="{%block users %}{% endblock %}"><a href="{% url animedbs.views.users %}">Users</a></li>
-                        </ul>
-                    </div><!--/.nav-collapse -->
-                    
-                    <div class="btn-group pull-right">
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            <i class="icon-user"></i> {{ username|default:"Username" }}
-                            <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url animedbs.views.profile %}">Profile</a></li>
-                            <li class="divider"></li>
-                            <li><a href="{% url animedbs.views.logout %}">Sign Out</a></li>
-                        </ul>
-                    </div>
-
-                    <form class="navbar-search pull-right" action="{% url animedbs.views.search %}" method="get">
-                        {% csrf_token %}
-                        <i class="icon-search icon-white"></i>
-                        <input type="text" name="keyword" class="search-query" placeholder="Search">
-                    </form>
-                    
-                </div>
+            <div class="btn-group pull-right">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon-user"></i> {{ username|default:"Username" }}
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url animedbs.views.profile %}">Profile</a></li>
+                    <li class="divider"></li>
+                    <li><a href="{% url animedbs.views.logout %}">Sign Out</a></li>
+                </ul>
             </div>
-        </div>
-        
 
-        <header>{%block header %}{% endblock %}</header>
-        
-        
-        <div id="content">
-            {% block content %}{% endblock %}
+            <form class="navbar-search pull-right" action="{% url animedbs.views.search %}" method="get">
+                {% csrf_token %}
+                <i class="icon-search icon-white"></i>
+                <input type="text" name="keyword" class="search-query" placeholder="Search">
+            </form>
+
         </div>
-        
-        
-        <footer>
-            <hr>
-            <p>&copy; 2012</p>
-        </footer>
-        
-        <script src="{{ STATIC_URL }}js/jquery-1.7.2.min.js"></script>
-        <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
-    </body>
-</html>
+    </div>
+</div>
+{% endblock %}
+{% block headerblock %}
+<header>{%block header %}{% endblock %}</header>
+{% endblock %}
+
+
+<div id="content">
+    {% block content %}{% endblock %}
+</div>
+
+
+<footer>
+<hr>
+<p>&copy; 2012</p>
+</footer>
+{% endblock %}
