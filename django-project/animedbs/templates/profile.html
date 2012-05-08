@@ -1,8 +1,17 @@
-{% extends 'main.html' %}
+{% extends 'base.html' %}
 {% block pagetitle %}Welcome{% endblock %}
+{% block header %}<h1>Profile</h1>{% endblock %}
 {% block content %}
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Update" /></p>
 </form>
+<h2>My comments</h2>
+<table>
+    <tbody>
+        {% for cmt in comments %}
+        {% include 'comment_object.html' %}
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

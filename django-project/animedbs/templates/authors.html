@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block authors %}active{% endblock %}
+{% block pagetitle %}Welcome{% endblock %}
+{% block header %}<h1>Authors</h1>{% endblock %}
+{% block content %}
+{% for author in author_list %}
+<h2>{{ author.id }} - {{ author.name }}</h2>
+<p>{{ author.desc }}</p>
+<h3>Authored animes:</h3>
+<ul>
+    {% for anime in author.anime_list %}
+    <li>{{ anime.0 }}</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}
