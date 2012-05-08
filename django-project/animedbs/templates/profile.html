@@ -10,21 +10,8 @@
 <table>
     <tbody>
         {% for cmt in comments %}
-        <tr>
-            <td>On {{ cmt.season }}</td>
-        </tr>
-        <tr>
-            <td>-- season {{ cmt.snum }} of {{ cmt.anime }}</td>
-        </tr>
-        <tr>
-            <td>Rated {{ cmt.rating }}</td>
-        </tr>
-        <tr>
-            <td>At {{ cmt.datetime }}</td>
-        </tr>
-        <tr>
-            <td>{{ cmt.text }}</td>
-        </tr>
+        {% include 'comment_object.html' %}
         {% endfor %}
+    </tbody>
 </table>
 {% endblock %}

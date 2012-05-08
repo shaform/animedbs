@@ -3,9 +3,11 @@
 {% block pagetitle %}Temp{% endblock %}
 {% block header %}
 <h1>Seiyu</h1>
+<ul>
+    <li><a href="{% url animedbs.views.create_seiyu %}">new</a></li>
+</ul>
 {% endblock %}
 {% block content %}
-<a href="{% url animedbs.views.edit_seiyu row.0 %}">Edit</a>
 <table>
     <thead>
         <tr>
@@ -15,31 +17,15 @@
         </tr>
     </thead>
     <tbody>
+        {% for row in user_list %}
         <tr>
             <td>{{ row.0 }}</td>
-            <td>{{ row.1 }}</td>
+            <td><a href="{% url animedbs.views.seiyu row.0 %}">{{ row.1 }}</a></td>
             <td>{{ row.2 }}</td>
             <td>{{ row.3 }}</td>
             <td>{{ row.4 }}</td>
         </tr>
+        {% endfor %}
     </tbody>
 </table>
-<h2>Participated Animes</h2>
-<ul>
-    {% for name in animes %}
-    <li>{{ name.0 }}</li>
-    {% endfor %}
-</ul>
-<h2>Characters</h2>
-<ul>
-    {% for name in characters %}
-    <li>{{ name.0 }}</li>
-    {% endfor %}
-</ul>
-<h2>Songs</h2>
-<ul>
-    {% for name in songs %}
-    <li>{{ name.0 }}</li>
-    {% endfor %}
-</ul>
 {% endblock %}

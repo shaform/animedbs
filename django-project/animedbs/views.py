@@ -274,8 +274,32 @@ def seiyus(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
             + ' FROM `SEIYU`;')
-    return render_to_response('seiyu.html', {
+    return render_to_response('seiyus.html', {
         'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
+
+@login_required
+def seiyu(request, sid):
+    cursor = connection.cursor()
+    cursor.execute('SELECT *'
+            + ' FROM `SEIYU` WHERE `Id` = %s;', [sid])
+    row = cursor.fetchone()
+    cursor.execute('SELECT `Title`'
+            + ' FROM `CHARACTER`, `ANIME`'
+            + ' WHERE `Voiced_by` = %s'
+            + ' AND `Present_in` = `ANIME`.`Id`;', [sid])
+    animes = cursor.fetchall()
+    cursor.execute('SELECT `Name`'
+            + ' FROM `CHARACTER` WHERE `Voiced_by` = %s;', [sid])
+    characters = cursor.fetchall()
+    cursor.execute('SELECT `Title`'
+            + ' FROM `SONG` WHERE `Singed_by` = %s;', [sid])
+    songs = cursor.fetchall()
+    return render_to_response('seiyu.html', {
+        'row' : row,
+        'animes' : animes,
+        'characters' : characters,
+        'songs' : songs,
         }, context_instance=RequestContext(request))
 
 def create_seiyu(request):
