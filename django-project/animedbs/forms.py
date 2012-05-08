@@ -63,6 +63,9 @@ class SeiyuEntity(object):
     def title(self):
         return 'Seiyu'
 
+    def nav_name(self):
+        return 'nav_seiyus'
+        
     def redirect(self):
         if self.mId:
             return None

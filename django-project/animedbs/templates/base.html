@@ -16,11 +16,11 @@
             <a class="brand" href="/">AI System</a>
             <div class="nav-collapse">
                 <ul class="nav">
-                    <li class="{%block animes %}{% endblock %}"><a href="{% url animedbs.views.animes %}">Animes</a></li>
-                    <li class="{%block songs %}{% endblock %}"><a href="{% url animedbs.views.songs %}">Songs</a></li>
-                    <li class="{%block seiyus %}{% endblock %}"><a href="{% url animedbs.views.seiyus %}">Seiyus</a></li>
-                    <li class="{%block authors %}{% endblock %}"><a href="{% url animedbs.views.authors %}">Authors</a></li>
-                    <li class="{%block users %}{% endblock %}"><a href="{% url animedbs.views.users %}">Users</a></li>
+                    <li{% if nav_animes  %} class="active"{% endif %}><a href="{% url animedbs.views.animes  %}">Animes</a></li>
+                    <li{% if nav_songs   %} class="active"{% endif %}><a href="{% url animedbs.views.songs   %}">Songs</a></li>
+                    <li{% if nav_seiyus  %} class="active"{% endif %}><a href="{% url animedbs.views.seiyus  %}">Seiyus</a></li>
+                    <li{% if nav_authors %} class="active"{% endif %}><a href="{% url animedbs.views.authors %}">Authors</a></li>
+                    <li{% if nav_users   %} class="active"{% endif %}><a href="{% url animedbs.views.users    %}">Users</a></li>
                 </ul>
             </div><!--/.nav-collapse -->
 
@@ -59,7 +59,8 @@
 
 
 <footer>
-<hr>
-<p>&copy; 2012</p>
+    <hr>
+    <p>&copy; 2012</p>
 </footer>
 {% endblock %}
+

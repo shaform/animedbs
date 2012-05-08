@@ -154,6 +154,7 @@ def users(request):
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
             + ' FROM `USER`;')
     return render_to_response('users.html', {
+        'nav_users' : True,
         'user_list' : cursor.fetchall(),
         'pagetitle' : 'Users',
         }, context_instance=RequestContext(request))
@@ -192,6 +193,7 @@ def user(request, user_id):
             })
 
     return render_to_response('user.html', {
+        'nav_users' : True,
         'user' : row,
         'comments' : comments,
         }, context_instance=RequestContext(request))
@@ -205,10 +207,10 @@ def search(request):
             + ' FROM `USER`;')
     keyword = request.GET['keyword']
     return render_to_response('temp.html', {
-        #'user_list' : cursor.fetchall(),
         'keyword': keyword,
-        'tbl': json.dumps(cursor.fetchall()),
-        'cols': [('number','ID'),('string', 'Email'),('string', 'Name'),('string', 'Gender')],
+        'cols': [('number','ID'),('string', 'Email'),('string', 'Name'),
+                ('string', 'Gender')],
+        'rows': json.dumps(cursor.fetchall()),
     }, context_instance=RequestContext(request))
 
 
@@ -216,10 +218,13 @@ def search(request):
 @login_required
 def animes(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT *'
+    cursor.execute('SELECT `Id`, `Title`, `Authored_by`, `Web_address`'
             + ' FROM `ANIME`;')
     return render_to_response('temp.html', {
-        'user_list' : cursor.fetchall(),
+        'nav_animes' : True,
+        'cols' : [('number','ID'),('string','Title'),('number','Authored_by')
+                ,('string','Webpage')],
+        'rows' : json.dumps(cursor.fetchall()),
         }, context_instance=RequestContext(request))
 
 
@@ -243,7 +248,8 @@ def songs(request):
     header = ['Id', 'Title', 'Sing_by',
             'Featured anime', 'Featured season', 'Type']
     return render_to_response('temp.html', {
-        'user_list' : songs,
+        'nav_songs' : True,
+        'user_list' : songs,                    # don't know how to show
         'table_header' : header,
         }, context_instance=RequestContext(request))
 
@@ -267,6 +273,7 @@ def authors(request):
             'anime_list' : cursor.fetchall(),
             })
     return render_to_response('authors.html', {
+        'nav_authors' : True,
         'author_list' : author_list,
         }, context_instance=RequestContext(request))
 
@@ -278,6 +285,7 @@ def seiyus(request):
     cursor.execute('SELECT *'
             + ' FROM `SEIYU`;')
     return render_to_response('seiyus.html', {
+        'nav_seiyus' : True,
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
@@ -299,6 +307,7 @@ def seiyu(request, sid):
             + ' FROM `SONG` WHERE `Singed_by` = %s;', [sid])
     songs = cursor.fetchall()
     return render_to_response('seiyu.html', {
+        'nav_seiyus' : True,
         'row' : row,
         'animes' : animes,
         'characters' : characters,
@@ -324,6 +333,8 @@ def create_entity(request, Entity, eid=None):
             if entity.redirect():
                 return entity.redirect()
     return render_to_response('form.html', {
+        entity.nav_name() : True,
         'pagetitle' : entity.title(),
         'form' : entity.form(),
         }, context_instance=RequestContext(request))
+
