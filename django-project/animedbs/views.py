@@ -281,15 +281,21 @@ def seiyus(request):
 def create_seiyu(request):
     return create_entity(request, SeiyuEntity)
 
+def edit_seiyu(request, eid):
+    return create_entity(request, SeiyuEntity, eid)
+
 
 @login_required
-def create_entity(request, Entity):
+def create_entity(request, Entity, eid=None):
     entity = Entity()
+    if eid:
+        entity.setId(eid)
     if request.method == 'POST':
         entity.parse(request.POST)
         if entity.is_valid():
             entity.update()
-            return redirect(entity.redirect())
+            if entity.redirect():
+                return entity.redirect()
     return render_to_response('form.html', {
         'pagetitle' : entity.title(),
         'form' : entity.form(),
