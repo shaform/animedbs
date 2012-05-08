@@ -9,6 +9,7 @@ urlpatterns = patterns('',
         url(r'^author/$', 'animedbs.views.authors'),
         url(r'^anime/$', 'animedbs.views.animes'),
         url(r'^seiyu/$', 'animedbs.views.seiyus'),
+        url(r'^seiyu/new/$', 'animedbs.views.create_seiyu'),
         url(r'^song/$', 'animedbs.views.songs'),
         url(r'^search/$', 'animedbs.views.search'),
 )

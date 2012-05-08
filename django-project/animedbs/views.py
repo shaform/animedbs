@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.template import RequestContext
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
+from animedbs.forms import SeiyuForm
 
 def login_required(function):
     def _dec(view_func):
@@ -46,8 +47,10 @@ def register(request, email):
             + 'VALUES (%s, %s, %s);', [email, 'Guest', 'other'])
     transaction.commit_unless_managed()
 
-    cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
-    request.session['user_id'] = cursor.fetchone()[0]
+    cursor.execute('SELECT `Id`, `Nickname` FROM `USER` WHERE Email = %s', [email])
+    row = cursor.fetchone()
+    request.session['user_id'] = row[0]
+    request.session['user_name'] = row[1]
 
     return redirect('animedbs.views.profile')
 
@@ -60,13 +63,14 @@ def login(request):
 
             # check if account exists
             email = form.cleaned_data['email']
-            cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
+            cursor.execute('SELECT `Id`, `Nickname` FROM `USER` WHERE Email = %s', [email])
             row = cursor.fetchone()
 
             if row is None:
                 return register(request, email)
             else:
                 request.session['user_id'] = row[0]
+                request.session['user_name'] = row[1]
                 return index(request)
 
     return render_to_response('login.html', {
@@ -109,6 +113,7 @@ def profile(request):
             cursor.execute('UPDATE `USER` SET `Nickname` = %s, `Gender` = %s'
                     + ' WHERE `Id` = %s;', [nickname, gender, user_id])
             transaction.commit_unless_managed()
+            request.session['user_name'] = nickname
             return redirect('animedbs.views.profile')
 
     cursor.execute('SELECT `Commentee_anime`, `Commentee_season`,'
@@ -269,7 +274,34 @@ def seiyus(request):
     cursor = connection.cursor()
     cursor.execute('SELECT *'
             + ' FROM `SEIYU`;')
-    return render_to_response('temp.html', {
+    return render_to_response('seiyu.html', {
         'user_list' : cursor.fetchall(),
+        }, context_instance=RequestContext(request))
+
+@login_required
+def create_seiyu(request):
+    form = SeiyuForm()
+    if request.method == 'POST':
+        form = SeiyuForm(request.POST)
+        if form.is_valid():
+            cursor = connection.cursor()
+
+            name = form.cleaned_data['name']
+            gender = form.cleaned_data['gender']
+            if gender == 'other':
+                gender = None
+            birthday = form.cleaned_data['birthday']
+            desc = form.cleaned_data['desc']
+            if desc == '':
+                desc = None
+
+            cursor.execute('INSERT INTO `SEIYU` (`Name`, `Gender`,'
+                    + '`Birthday`, `Description`)'
+                    + 'VALUES (%s, %s, %s, %s);',
+                    [name, gender, birthday, desc])
+            transaction.commit_unless_managed()
+            return redirect('animedbs.views.seiyus')
+    return render_to_response('form.html', {
+        'form' : form,
         }, context_instance=RequestContext(request))
 
