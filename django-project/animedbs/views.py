@@ -206,7 +206,7 @@ def search(request):
     cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
             + ' FROM `USER`;')
     keyword = request.GET['keyword']
-    return render_to_response('temp.html', {
+    return render_to_response('table.html', {
         'keyword': keyword,
         'cols': [('number','ID'),('string', 'Email'),('string', 'Name'),
                 ('string', 'Gender')],
@@ -218,12 +218,27 @@ def search(request):
 @login_required
 def animes(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT `Id`, `Title`, `Authored_by`, `Web_address`'
-            + ' FROM `ANIME`;')
-    return render_to_response('temp.html', {
+    sql = '''
+    SELECT `Title`, `Author`, `Web_address`
+    FROM (
+        SELECT `Title`, `Authored_by`, `Web_address` FROM `ANIME`
+    ) AS t1
+    
+    LEFT JOIN (
+        SELECT `Id` AS `Authored_by`, `Name` AS `Author` FROM `AUTHOR`
+    ) AS t2 USING(`Authored_by`);
+    '''
+    cursor.execute(sql)
+    
+    cols = [
+        ('string','Title'),
+        ('string','Author'),
+        ('string','Webpage'),
+    ]
+    return render_to_response('table.html', {
         'nav_animes' : True,
-        'cols' : [('number','ID'),('string','Title'),('number','Authored_by')
-                ,('string','Webpage')],
+        'pagetitle' : 'Animes',
+        'cols' : cols,
         'rows' : json.dumps(cursor.fetchall()),
         }, context_instance=RequestContext(request))
 
@@ -232,25 +247,41 @@ def animes(request):
 @login_required
 def songs(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT `Id`, `Title`, `Singed_by`,'
-            + '`Featured_in_aid`, `Featured_in_snum`,'
-            + ' `Type` FROM `SONG`;')
-    rows = cursor.fetchall()
-    songs = []
-    for song in rows:
-        cursor.execute('SELECT `Title`'
-                + ' FROM `ANIME` WHERE `Id` = %s;', [song[3]])
-        anime = cursor.fetchone()[0]
-        cursor.execute('SELECT `Name`'
-                + ' FROM `SEIYU` WHERE `Id` = %s;', [song[2]])
-        seiyu = cursor.fetchone()[0]
-        songs.append([song[0], song[1], seiyu, anime, song[4], song[5]])
-    header = ['Id', 'Title', 'Sing_by',
-            'Featured anime', 'Featured season', 'Type']
-    return render_to_response('temp.html', {
+    sql = '''
+    SELECT `Title`, `Seiyu_name`, `Anime_name`, `Anime_series`, `Type`
+    FROM (
+        SELECT
+            `Title`,
+            `Singed_by` AS `Seiyu_id`,
+            `Featured_in_aid` AS `Anime_id`,
+            `Featured_in_snum` AS `Anime_series`,
+            `Type`
+        FROM `SONG`
+    ) AS t1
+        
+    LEFT JOIN (
+        SELECT `Title` AS `Anime_name`, `Id` AS `Anime_id` FROM `ANIME`
+    ) AS t2 USING (`Anime_id`)
+
+    LEFT JOIN (
+        SELECT `Name` AS `Seiyu_name`, `Id` AS `Seiyu_id` FROM `SEIYU`
+    ) AS t3 USING (`Seiyu_id`);
+    '''
+    cursor.execute(sql)
+    
+    cols = [
+        ('string', 'Title'),
+        ('string', 'Sing_by'),
+        ('string', 'Featured anime'),
+        ('number', 'Featured season'),
+        ('string', 'Type'),
+    ]
+    return render_to_response('table.html', {
         'nav_songs' : True,
-        'user_list' : songs,                    # don't know how to show
-        'table_header' : header,
+        'pagetitle' : 'Songs',
+        'cols' : cols,
+        'rows' : json.dumps(cursor.fetchall()),
+        #'debug' : sql,
         }, context_instance=RequestContext(request))
 
 ## -- Authors -- ##
