@@ -11,7 +11,7 @@ def login_required(function):
     def _dec(view_func):
         def _view(request, *args, **kwargs):
             if 'user_id' not in request.session:
-                return redirect('/')
+                return redirect('animedbs.views.profile')
             else:
                 return view_func(request, *args, **kwargs)
 
@@ -37,7 +37,7 @@ def index(request):
 def logout(request):
     for key in request.session.keys():
         del request.session[key]
-    return redirect('/')
+    return redirect('animedbs.views.home')
 
 def register(request, email):
     cursor = connection.cursor()
@@ -49,7 +49,7 @@ def register(request, email):
     cursor.execute('SELECT `Id` FROM `USER` WHERE Email = %s', [email])
     request.session['user_id'] = cursor.fetchone()[0]
 
-    return redirect('/profile')
+    return redirect('animedbs.views.profile')
 
 def login(request):
     form = LoginForm()
@@ -86,7 +86,7 @@ def home(request):
 @login_required
 def profile(request):
     if 'user_id' not in request.session:
-        return redirect('/')
+        return redirect('animedbs.views.home')
 
     cursor = connection.cursor()
 
@@ -108,11 +108,35 @@ def profile(request):
             cursor.execute('UPDATE `USER` SET `Nickname` = %s, `Gender` = %s'
                     + ' WHERE `Id` = %s;', [nickname, gender, user_id])
             transaction.commit_unless_managed()
-            return redirect('/profile')
+            return redirect('animedbs.views.profile')
+
+    cursor.execute('SELECT `Commentee_anime`, `Commentee_season`,'
+            + ' `Rating`, `Text`, `Datetime`'
+            + ' FROM `COMMENTS_ON` WHERE `Commenter` = %s;', [user_id])
+    rows = cursor.fetchall()
+    comments = []
+
+    for cmt in rows:
+        cursor.execute('SELECT `Title`'
+                + ' FROM `ANIME` WHERE `Id` = %s;', [cmt[0]])
+        anime = cursor.fetchone()[0]
+        cursor.execute('SELECT `Full_name`'
+                + ' FROM `SEASON` WHERE `Part_of` = %s'
+                + ' AND `Series_num` = %s;', [cmt[0], cmt[1]])
+        season = cursor.fetchone()[0]
+        comments.append({
+            'anime' : anime,
+            'season' : season,
+            'snum' : cmt[1],
+            'rating' : cmt[2],
+            'text' : cmt[3],
+            'datetime' : cmt[4],
+            })
 
     return render_to_response('profile.html', {
         'email' : email,
         'form' : form,
+        'comments' : comments,
         }, context_instance=RequestContext(request))
 
 
@@ -138,10 +162,25 @@ def user(request, user_id):
     cursor.execute('SELECT `Commentee_anime`, `Commentee_season`,'
             + ' `Rating`, `Text`, `Datetime`'
             + ' FROM `COMMENTS_ON` WHERE `Commenter` = %s;', [user_id])
-    comments = cursor.fetchall()
+    rows = cursor.fetchall()
+    comments = []
 
-    for cmt in comments:
-        pass
+    for cmt in rows:
+        cursor.execute('SELECT `Title`'
+                + ' FROM `ANIME` WHERE `Id` = %s;', [cmt[0]])
+        anime = cursor.fetchone()[0]
+        cursor.execute('SELECT `Full_name`'
+                + ' FROM `SEASON` WHERE `Part_of` = %s'
+                + ' AND `Series_num` = %s;', [cmt[0], cmt[1]])
+        season = cursor.fetchone()[0]
+        comments.append({
+            'anime' : anime,
+            'season' : season,
+            'snum' : cmt[1],
+            'rating' : cmt[2],
+            'text' : cmt[3],
+            'datetime' : cmt[4],
+            })
 
     return render_to_response('user.html', {
         'user' : row,
