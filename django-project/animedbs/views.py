@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.template import RequestContext
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
-from animedbs.forms import SeiyuForm
+from animedbs.forms import SeiyuEntity
 
 def login_required(function):
     def _dec(view_func):
@@ -71,7 +71,7 @@ def login(request):
             else:
                 request.session['user_id'] = row[0]
                 request.session['user_name'] = row[1]
-                return index(request)
+                return redirect('animedbs.views.home')
 
     return render_to_response('login.html', {
         'form' : form,
@@ -154,6 +154,7 @@ def users(request):
             + ' FROM `USER`;')
     return render_to_response('users.html', {
         'user_list' : cursor.fetchall(),
+        'pagetitle' : 'Users',
         }, context_instance=RequestContext(request))
 
 @login_required
@@ -243,7 +244,6 @@ def songs(request):
         'table_header' : header,
         }, context_instance=RequestContext(request))
 
-
 ## -- Authors -- ##
 @login_required
 def authors(request):
@@ -278,30 +278,19 @@ def seiyus(request):
         'user_list' : cursor.fetchall(),
         }, context_instance=RequestContext(request))
 
-@login_required
 def create_seiyu(request):
-    form = SeiyuForm()
+    return create_entity(request, SeiyuEntity)
+
+
+@login_required
+def create_entity(request, Entity):
+    entity = Entity()
     if request.method == 'POST':
-        form = SeiyuForm(request.POST)
-        if form.is_valid():
-            cursor = connection.cursor()
-
-            name = form.cleaned_data['name']
-            gender = form.cleaned_data['gender']
-            if gender == 'other':
-                gender = None
-            birthday = form.cleaned_data['birthday']
-            desc = form.cleaned_data['desc']
-            if desc == '':
-                desc = None
-
-            cursor.execute('INSERT INTO `SEIYU` (`Name`, `Gender`,'
-                    + '`Birthday`, `Description`)'
-                    + 'VALUES (%s, %s, %s, %s);',
-                    [name, gender, birthday, desc])
-            transaction.commit_unless_managed()
-            return redirect('animedbs.views.seiyus')
+        entity.parse(request.POST)
+        if entity.is_valid():
+            entity.update()
+            return redirect(entity.redirect())
     return render_to_response('form.html', {
-        'form' : form,
+        'pagetitle' : entity.title(),
+        'form' : entity.form(),
         }, context_instance=RequestContext(request))
-

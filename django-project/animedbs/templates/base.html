@@ -1,6 +1,6 @@
 {% extends 'html_base.html' %}
 {% block htmltitle %}
-{% block pagetitle %}{% endblock %}
+{% block pagetitle %}{{ pagetitle }}{% endblock %}
 - Anime Database Information System
 {% endblock %}
 {% block bodyblock %}
@@ -47,7 +47,9 @@
 </div>
 {% endblock %}
 {% block headerblock %}
-<header>{%block header %}{% endblock %}</header>
+<header>{%block header %}
+{% block headerline %}<h1>{{ pagetitle }}{% endblock %}
+{% endblock %}</header>
 {% endblock %}
 
 
