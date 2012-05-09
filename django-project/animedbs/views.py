@@ -11,6 +11,7 @@ from django.template import RequestContext
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
 from animedbs.forms import SeiyuEntity
+from animedbs.forms import SongEntity
 
 def login_required(function):
     def _dec(view_func):
@@ -281,15 +282,15 @@ def animes(request):
         'rows' : json.dumps(rows, cls=DecimalEncoder),
         }, context_instance=RequestContext(request))
 
-
 ## -- Songs -- ##
 @login_required
 def songs(request):
     cursor = connection.cursor()
     sql = '''
-    SELECT `Title`, `Seiyu_name`, `Anime_name`, `Anime_series`, `Type`
+    SELECT `Id`, `Title`, `Seiyu_name`, `Anime_name`, `Anime_series`, `Type`
     FROM (
         SELECT
+            `Id`,
             `Title`,
             `Singed_by` AS `Seiyu_id`,
             `Featured_in_aid` AS `Anime_id`,
@@ -307,21 +308,33 @@ def songs(request):
     ) AS t3 USING (`Seiyu_id`);
     '''
     cursor.execute(sql)
+
+    rows = cursor.fetchall()
     
     cols = [
+        ('number', 'Id'),
         ('string', 'Title'),
         ('string', 'Sing_by'),
         ('string', 'Featured anime'),
         ('number', 'Featured season'),
         ('string', 'Type'),
     ]
+
+    rowlinks = []
+    for row in rows:
+        rowlinks.append(reverse('animedbs.views.edit_song', args=[row[0]]))
+
     return render_to_response('table.html', {
         'nav_songs' : True,
         'pagetitle' : 'Songs',
         'cols' : cols,
-        'rows' : json.dumps(cursor.fetchall()),
+        'rows' : json.dumps(rows),
+        'rowlinks' : json.dumps(rowlinks),
         #'db_debug' : sql,
         }, context_instance=RequestContext(request))
+
+def edit_song(request, eid):
+    return create_entity(request, SongEntity, eid)
 
 ## -- Authors -- ##
 @login_required

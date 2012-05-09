@@ -13,5 +13,7 @@ urlpatterns = patterns('',
         url(r'^seiyu/(\d+)/$', 'animedbs.views.seiyu'),
         url(r'^seiyu/(\d+)/edit/$', 'animedbs.views.edit_seiyu'),
         url(r'^song/$', 'animedbs.views.songs'),
+        url(r'^song/(\d+)/$', 'animedbs.views.edit_song'),
+        url(r'^song/(\d+)/edit/$', 'animedbs.views.edit_song'),
         url(r'^search/$', 'animedbs.views.search'),
 )
