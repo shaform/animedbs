@@ -1,3 +1,4 @@
+import decimal
 import json
 from django.core.urlresolvers import reverse
 from django.db import connection, transaction
@@ -239,14 +240,21 @@ def search(request):
 def animes(request):
     cursor = connection.cursor()
     sql = '''
-    SELECT `Title`, `Author`, `Web_address`
+    SELECT `Title`, `Author`, `Web_address`, `Avg_rating`
     FROM (
-        SELECT `Title`, `Authored_by`, `Web_address` FROM `ANIME`
+        SELECT `Id`, `Title`, `Authored_by`, `Web_address` FROM `ANIME`
     ) AS t1
     
     LEFT JOIN (
         SELECT `Id` AS `Authored_by`, `Name` AS `Author` FROM `AUTHOR`
-    ) AS t2 USING(`Authored_by`);
+    ) AS t2 USING(`Authored_by`)
+
+    LEFT JOIN (
+        SELECT `Commentee_anime` AS `Id`,
+               AVG(`Rating`) AS `Avg_rating`
+               FROM `COMMENTS_ON`
+               GROUP BY `Id`
+    ) AS t3 USING(`Id`);
     '''
     cursor.execute(sql)
     
@@ -256,12 +264,20 @@ def animes(request):
         ('string','Title'),
         ('string','Author'),
         ('string','Webpage'),
+        ('number','Rating'),
     ]
+
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return float('%.2f' % o)
+            return super(DecimalEncoder, self).default(o)
+
     return render_to_response('table.html', {
         'nav_animes' : True,
         'pagetitle' : 'Animes',
         'cols' : cols,
-        'rows' : json.dumps(rows),
+        'rows' : json.dumps(rows, cls=DecimalEncoder),
         }, context_instance=RequestContext(request))
 
 
