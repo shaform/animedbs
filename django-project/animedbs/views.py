@@ -303,7 +303,7 @@ def songs(request):
         'pagetitle' : 'Songs',
         'cols' : cols,
         'rows' : json.dumps(cursor.fetchall()),
-        #'debug' : sql,
+        #'db_debug' : sql,
         }, context_instance=RequestContext(request))
 
 ## -- Authors -- ##

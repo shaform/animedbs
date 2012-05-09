@@ -2,7 +2,7 @@
 {% block users %}active{% endblock %}
 {% block content %}
 {% if keyword %} <h2>The result of searching: "{{ keyword }}"</h2> {% endif %}
-{% if debug %} <h2>debug msg: "</h2><pre>{{ debug }}</pre> {% endif %}
+{% if db_debug %} <h2>debug msg: "</h2><pre>{{ db_debug }}</pre> {% endif %}
 <div id="table_div"></div>
 {% endblock %}
 
