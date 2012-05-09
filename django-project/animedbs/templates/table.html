@@ -20,6 +20,18 @@
             
             var table = new google.visualization.Table($('#table_div')[0]);
             table.draw(data);
+
+
+            {% if rowlinks %}
+            var rowlinks = {{ rowlinks|safe }};
+            function selectHandler(e)     {   
+                var selection = table.getSelection()[0];
+                if (selection.row != null) {
+                    window.location = rowlinks[selection.row];
+                }
+            }
+            google.visualization.events.addListener(table, 'select', selectHandler); 
+            {% endif %}
         }
     </script>
 {% endblock %}

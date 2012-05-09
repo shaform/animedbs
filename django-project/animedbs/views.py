@@ -1,4 +1,5 @@
 import json
+from django.core.urlresolvers import reverse
 from django.db import connection, transaction
 from django.http import HttpResponse
 from django.http import Http404
@@ -151,12 +152,31 @@ def profile(request):
 @login_required
 def users(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
-            + ' FROM `USER`;')
-    return render_to_response('users.html', {
+    sql = '''
+    SELECT `Id`, `Email`, `Nickname`, `Gender`
+    FROM `USER`;
+    '''
+    cursor.execute(sql)
+    
+    rows = cursor.fetchall()
+    
+    cols = [
+        ('number','Id'),
+        ('string','Email'),
+        ('string','Nickname'),
+        ('string','Gender'),
+    ]
+
+    rowlinks = []
+    for row in rows:
+        rowlinks.append(reverse('animedbs.views.user', args=[row[0]]))
+
+    return render_to_response('table.html', {
         'nav_users' : True,
-        'user_list' : cursor.fetchall(),
         'pagetitle' : 'Users',
+        'cols' : cols,
+        'rows' : json.dumps(rows),
+        'rowlinks' : json.dumps(rowlinks),
         }, context_instance=RequestContext(request))
 
 @login_required
@@ -230,6 +250,8 @@ def animes(request):
     '''
     cursor.execute(sql)
     
+    rows = cursor.fetchall()
+    
     cols = [
         ('string','Title'),
         ('string','Author'),
@@ -239,7 +261,7 @@ def animes(request):
         'nav_animes' : True,
         'pagetitle' : 'Animes',
         'cols' : cols,
-        'rows' : json.dumps(cursor.fetchall()),
+        'rows' : json.dumps(rows),
         }, context_instance=RequestContext(request))
 
 
