@@ -443,7 +443,7 @@ def create_entity(request, Entity, eid=None, delete=False):
         entity.setId(eid)
     if request.method == 'POST':
         entity.parse(request.POST)
-        if request.POST['delete']:
+        if 'delete' in request.POST:
             entity.delete()
             return entity.redirect()
         if entity.is_valid():
