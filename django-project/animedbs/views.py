@@ -14,7 +14,7 @@ def login_required(function):
     def _dec(view_func):
         def _view(request, *args, **kwargs):
             if 'user_id' not in request.session:
-                return redirect('animedbs.views.profile')
+                return redirect('animedbs.views.home')
             else:
                 return view_func(request, *args, **kwargs)
 
