@@ -1,3 +1,4 @@
+import datetime
 import decimal
 import json
 from django.core.urlresolvers import reverse
@@ -351,11 +352,37 @@ def authors(request):
 @login_required
 def seiyus(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT *'
-            + ' FROM `SEIYU`;')
-    return render_to_response('seiyus.html', {
+    cursor.execute('SELECT * FROM `SEIYU`;')
+
+    rows = cursor.fetchall()
+
+    cols = [
+        ('number','Id'),
+        ('string','Name'),
+        ('string','Gender'),
+        ('string','Birthday'),
+        ('string','Description'),
+    ]
+
+    rowlinks = []
+    for row in rows:
+        rowlinks.append(reverse('animedbs.views.seiyu', args=[row[0]]))
+
+    nav_list = [['new', reverse('animedbs.views.create_seiyu')],]
+
+    class DateEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, datetime.date):
+                return o.strftime('%Y-%m-%d')
+            return super(DateEncoder, self).default(o)
+
+    return render_to_response('table.html', {
         'nav_seiyus' : True,
-        'user_list' : cursor.fetchall(),
+        'pagetitle' : 'Seiyus',
+        'cols' : cols,
+        'rows' : json.dumps(rows, cls=DateEncoder),
+        'rowlinks' : json.dumps(rowlinks),
+        'nav_list' : nav_list,
         }, context_instance=RequestContext(request))
 
 @login_required

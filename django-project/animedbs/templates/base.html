@@ -52,7 +52,17 @@
 {% endblock %}</header>
 {% endblock %}
 
-
+{% block snd_nav %}
+{% if nav_list %}
+<div id="snd_nav">
+    <ul>
+        {% for item in nav_list %}
+        <li><a href="{{ item.1 }}">{{ item.0 }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
 <div id="content">
     {% block content %}{% endblock %}
 </div>
