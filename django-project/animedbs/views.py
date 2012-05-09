@@ -337,7 +337,7 @@ def songs(request):
         }, context_instance=RequestContext(request))
 
 def edit_song(request, eid):
-    return create_entity(request, SongEntity, eid)
+    return create_entity(request, SongEntity, eid, delete=True)
 
 def create_song(request):
     return create_entity(request, SongEntity)
@@ -437,12 +437,15 @@ def edit_seiyu(request, eid):
 
 
 @login_required
-def create_entity(request, Entity, eid=None):
+def create_entity(request, Entity, eid=None, delete=False):
     entity = Entity()
     if eid:
         entity.setId(eid)
     if request.method == 'POST':
         entity.parse(request.POST)
+        if request.POST['delete']:
+            entity.delete()
+            return entity.redirect()
         if entity.is_valid():
             entity.update()
             if entity.redirect():
@@ -451,5 +454,6 @@ def create_entity(request, Entity, eid=None):
         entity.nav_name() : True,
         'pagetitle' : entity.title(),
         'form' : entity.form(),
+        'delete' : delete,
         }, context_instance=RequestContext(request))
 

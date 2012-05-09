@@ -2,6 +2,11 @@
 {% block content %}
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Submit" class="btn btn-primary" /></p>
+    <p>
+    <input type="submit" value="Submit" class="btn btn-primary" />
+    {% if delete %}
+    <input name="delete" type="submit" value="Delete" class="btn" />
+    {% endif %}
+    </p>
 </form>
 {% endblock %}

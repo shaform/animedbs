@@ -199,3 +199,10 @@ class SongEntity(ObjectEntity):
                     ''',
                     [title, anime, season, singed_by, feature_type, lyrics])
         transaction.commit_unless_managed()
+
+    def delete(self):
+        if self.mId:
+            cursor = connection.cursor()
+            cursor.execute('DELETE FROM `SONG` WHERE `Id` = %s;', [self.mId])
+            transaction.commit_unless_managed()
+            self.mId = None
