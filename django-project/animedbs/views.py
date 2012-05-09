@@ -324,17 +324,23 @@ def songs(request):
     for row in rows:
         rowlinks.append(reverse('animedbs.views.edit_song', args=[row[0]]))
 
+    nav_list = [['new', reverse('animedbs.views.create_song')],]
+
     return render_to_response('table.html', {
         'nav_songs' : True,
         'pagetitle' : 'Songs',
         'cols' : cols,
         'rows' : json.dumps(rows),
         'rowlinks' : json.dumps(rowlinks),
+        'nav_list' : nav_list,
         #'db_debug' : sql,
         }, context_instance=RequestContext(request))
 
 def edit_song(request, eid):
     return create_entity(request, SongEntity, eid)
+
+def create_song(request):
+    return create_entity(request, SongEntity)
 
 ## -- Authors -- ##
 @login_required

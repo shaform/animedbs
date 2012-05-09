@@ -13,6 +13,7 @@ class ObjectEntity(object):
     def __init__(self):
         self.mId = None
         self.initial = None
+        self.entity_title = None
         self.mForm = self.Form()
 
     def form(self):
@@ -27,6 +28,12 @@ class ObjectEntity(object):
     def setId(self, Id):
         self.mId = Id
         self.mForm = self.Form(initial=self.initial)
+
+    def title(self):
+        if self.entity_title:
+            return self.entity_title
+        else:
+            return self.Title
 
 
 class LoginForm(forms.Form):
@@ -48,6 +55,7 @@ class SeiyuForm(forms.Form):
 class SeiyuEntity(ObjectEntity):
 
     Form = SeiyuForm
+    Title = 'Seiyu'
 
     def setId(self, Id):
         cursor = connection.cursor()
@@ -64,11 +72,9 @@ class SeiyuEntity(ObjectEntity):
                 }
         if self.initial['gender'] is None:
             self.initial['gender'] = 'other'
+        self.entity_title = row[0]
 
         super(SeiyuEntity, self).setId(Id)
-
-    def title(self):
-        return 'Seiyu'
 
     def nav_name(self):
         return 'nav_seiyus'
@@ -116,6 +122,7 @@ class SongForm(forms.Form):
 class SongEntity(ObjectEntity):
 
     Form = SongForm
+    Title = 'Songs'
 
     def setChoices(self):
         self.mForm.fields['featured'].choices = self.feature_choices
@@ -154,20 +161,41 @@ class SongEntity(ObjectEntity):
                 'feature_type' : row[4],
                 'lyrics' : row[5],
                 }
+        self.entity_title = row[0]
         super(SongEntity, self).setId(Id)
         self.setChoices()
-
-    def title(self):
-        return 'Song'
 
     def nav_name(self):
         return 'nav_songs'
         
     def redirect(self):
         if self.mId:
-            return redirect('animedbs.views.seiyus')
+            return redirect('animedbs.views.edit_song', self.mId)
         else:
-            return redirect('animedbs.views.seiyus')
+            return redirect('animedbs.views.songs')
 
     def update(self):
-        pass
+        title = self.mForm.cleaned_data['title']
+        anime, season = eval(self.mForm.cleaned_data['featured'])
+        singed_by = self.mForm.cleaned_data['singed_by']
+        feature_type = self.mForm.cleaned_data['feature_type']
+        lyrics = self.mForm.cleaned_data['lyrics']
+        if lyrics == '':
+            lyrics = None
+        cursor = connection.cursor()
+        if self.mId:
+            cursor.execute(
+                    '''UPDATE `SONG` SET `Title` = %s,
+                       `Featured_in_aid` = %s, `Featured_in_snum` = %s,
+                       `Singed_by` = %s, `Type` = %s, `Lyrics` = %s
+                       WHERE `Id` = %s;
+                    ''',
+                    [title, anime, season, singed_by, feature_type, lyrics, self.mId])
+        else:
+            cursor.execute(
+                    '''INSERT INTO `SONG` (`Title`, `Featured_in_aid`,
+                       `Featured_in_snum`, `Singed_by`, `Type`, `Lyrics`)
+                        VALUES (%s, %s, %s, %s, %s, %s);
+                    ''',
+                    [title, anime, season, singed_by, feature_type, lyrics])
+        transaction.commit_unless_managed()
