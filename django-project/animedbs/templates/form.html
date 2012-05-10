@@ -3,7 +3,7 @@
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}
     <p>
-    <input type="submit" value="Submit" class="btn btn-primary" />
+    <input type="submit" value="Update" class="btn btn-primary" />
     {% if delete %}
     <input name="delete" type="submit" value="Delete" class="btn" />
     {% endif %}

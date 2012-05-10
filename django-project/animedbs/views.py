@@ -268,6 +268,7 @@ def animes(request):
         ('string','Webpage'),
         ('number','Rating'),
     ]
+    nav_list = [['Season View', reverse('animedbs.views.seasons')],]
 
     class DecimalEncoder(json.JSONEncoder):
         def default(self, o):
@@ -280,6 +281,59 @@ def animes(request):
         'pagetitle' : 'Animes',
         'cols' : cols,
         'rows' : json.dumps(rows, cls=DecimalEncoder),
+        'nav_list' : nav_list,
+        }, context_instance=RequestContext(request))
+
+@login_required
+def seasons(request):
+    cursor = connection.cursor()
+    sql = '''
+    SELECT `Full_name`, `Title`, `Series_num`, `Total_episodes`,
+           `Release_year`, `Release_month`, `Avg_rating`, `Part_of`
+
+    FROM `SEASON` AS t1
+
+    LEFT JOIN (
+        SELECT `Id` AS `Part_of`, `Title` FROM `ANIME`
+    ) AS t2 USING (`Part_of`)
+
+    LEFT JOIN (
+        SELECT `Commentee_anime` AS `Part_of`,
+               `Commentee_season` AS `Series_num`,
+               AVG(`Rating`) AS `Avg_rating`
+               FROM `COMMENTS_ON`
+               GROUP BY `Part_of`, `Series_num`
+    ) AS t3 USING(`Part_of`, `Series_num`);
+    '''
+    cursor.execute(sql)
+    
+    crows = cursor.fetchall()
+
+    rows = [ list(x[:4]) + ['%d-%02d' % (x[4], x[5]), x[6]] for x in crows ]
+    
+    cols = [
+        ('string','Full_name'),
+        ('string','Anime'),
+        ('number','Season'),
+        ('number','Total Episodes'),
+        ('string','Release_time'),
+        ('number','Rating'),
+    ]
+
+    nav_list = [['Anime View', reverse('animedbs.views.animes')],]
+
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return float('%.2f' % o)
+            return super(DecimalEncoder, self).default(o)
+
+    return render_to_response('table.html', {
+        'nav_animes' : True,
+        'pagetitle' : 'Seasons',
+        'cols' : cols,
+        'rows' : json.dumps(rows, cls=DecimalEncoder),
+        'nav_list' : nav_list
         }, context_instance=RequestContext(request))
 
 ## -- Songs -- ##
