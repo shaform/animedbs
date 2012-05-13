@@ -12,6 +12,7 @@ from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
 from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
+from animedbs.forms import CommentEntity
 
 def login_required(function):
     def _dec(view_func):
@@ -150,6 +151,25 @@ def profile(request):
         'username' : nickname,
         'comments' : comments,
         }, context_instance=RequestContext(request))
+
+
+@login_required
+def comment(request, aid, snum):
+    cursor = connection.cursor()
+
+    user_id = request.session['user_id']
+
+    sql = '''
+    SELECT * FROM `COMMENTS_ON`
+    WHERE `Commenter` = %s AND `Commentee_anime` = %s
+    AND `Commentee_season` = %s;
+    '''
+    cursor.execute(sql, [user_id, aid, snum])
+
+    if cursor.fetchone() is None:
+        return create_entity(request, CommentEntity, [aid, snum, user_id])
+    else:
+        return create_entity(request, CommentEntity, [aid, snum, user_id], True)
 
 
 @login_required
@@ -385,6 +405,8 @@ def season(request, aid, snum):
         'datetime' : x[3],
         } for x in rows ]
 
+    nav_list = [['edit_comment', reverse('animedbs.views.comment', args=[aid, snum])],]
+
     return render_to_response('season.html', {
         'full_name' : row[0],
         'snum' : snum,
@@ -393,6 +415,7 @@ def season(request, aid, snum):
         'year' : row[2],
         'month' : row[3],
         'comments' : comments,
+        'nav_list' : nav_list,
         }, context_instance=RequestContext(request))
 
 ## -- Songs -- ##

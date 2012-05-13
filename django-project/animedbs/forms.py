@@ -206,3 +206,83 @@ class SongEntity(ObjectEntity):
             cursor.execute('DELETE FROM `SONG` WHERE `Id` = %s;', [self.mId])
             transaction.commit_unless_managed()
             self.mId = None
+
+class CommentForm(forms.Form):
+    rating = forms.ChoiceField(choices=(
+        (1,1),
+        (2,2),
+        (3,3),
+        (4,4),
+        (5,5),
+        ))
+    text = forms.CharField(max_length=1000)
+
+class CommentEntity(ObjectEntity):
+
+    Form = CommentForm
+    Title = 'Comment'
+
+    def setId(self, Ids):
+        cursor = connection.cursor()
+        self.mSnum = Ids[1]
+        self.mCommenter = Ids[2]
+        cursor.execute('''SELECT
+                          `Rating`,
+                          `Text`
+                          FROM `COMMENTS_ON`
+                          WHERE `Commentee_anime` = %s
+                          AND `Commentee_season` = %s
+                          AND `Commenter` = %s;
+                          ''', [Ids[0], Ids[1], Ids[2]])
+        row = cursor.fetchone()
+        if row:
+            self.initial = {
+                    'rating' : row[0],
+                    'text' : row[1],
+                    }
+
+        super(CommentEntity, self).setId(Ids[0])
+
+    def nav_name(self):
+        return 'nav_none'
+        
+    def redirect(self):
+        return redirect('animedbs.views.season', self.mId, self.mSnum)
+
+    def update(self):
+        rating = self.mForm.cleaned_data['rating']
+        text = self.mForm.cleaned_data['text']
+        cursor = connection.cursor()
+
+        sql = '''
+        DELETE FROM `COMMENTS_ON`
+        WHERE `Commenter` = %s AND `Commentee_anime` = %s
+        AND `Commentee_season` = %s;
+        '''
+        cursor.execute(sql, [self.mCommenter, self.mId, self.mSnum])
+
+        sql = '''
+        INSERT INTO `COMMENTS_ON` (
+        `Commenter`,
+        `Commentee_anime`,
+        `Commentee_season`,
+        `Rating`,
+        `Text`,
+        `Datetime`)
+        VALUES (%s, %s, %s, %s, %s, %s);
+        '''
+        cursor.execute(sql,
+                [self.mCommenter, self.mId, self.mSnum,
+                    rating, text, datetime.datetime.now()])
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        if self.mId:
+            cursor = connection.cursor()
+            sql = '''
+            DELETE FROM `COMMENTS_ON`
+            WHERE `Commenter` = %s AND `Commentee_anime` = %s
+            AND `Commentee_season` = %s;
+            '''
+            cursor.execute(sql, [self.mCommenter, self.mId, self.mSnum])
+            transaction.commit_unless_managed()
