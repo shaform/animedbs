@@ -310,6 +310,10 @@ def seasons(request):
     crows = cursor.fetchall()
 
     rows = [ list(x[:4]) + ['%d-%02d' % (x[4], x[5]), x[6]] for x in crows ]
+
+    rowlinks = []
+    for row in crows:
+        rowlinks.append(reverse('animedbs.views.season', args=[row[7], row[2]]))
     
     cols = [
         ('string','Full_name'),
@@ -322,6 +326,7 @@ def seasons(request):
 
     nav_list = [['Anime View', reverse('animedbs.views.animes')],]
 
+
     class DecimalEncoder(json.JSONEncoder):
         def default(self, o):
             if isinstance(o, decimal.Decimal):
@@ -333,7 +338,55 @@ def seasons(request):
         'pagetitle' : 'Seasons',
         'cols' : cols,
         'rows' : json.dumps(rows, cls=DecimalEncoder),
-        'nav_list' : nav_list
+        'nav_list' : nav_list,
+        'rowlinks' : json.dumps(rowlinks),
+        }, context_instance=RequestContext(request))
+
+@login_required
+def season(request, aid, snum):
+
+    cursor = connection.cursor()
+
+    sql = '''
+    SELECT `Full_name`, `Total_episodes`, `Release_year`, `Release_month`, `Title`
+    FROM `SEASON`, `ANIME`
+    WHERE `Part_of` = %s AND `Series_num` = %s AND `Id` = `Part_of`;
+    '''
+
+    cursor.execute(sql, [aid, snum])
+
+    row = cursor.fetchone()
+
+    if row is None:
+        raise Http404()
+
+
+    sql = '''
+    SELECT `Nickname`, `Rating`, `Text`, `Datetime`
+    FROM `USER`, `COMMENTS_ON`
+    WHERE `Commentee_anime` = %s
+    AND `Commentee_season` = %s
+    AND `Commenter` = `Id`;
+    '''
+
+    cursor.execute(sql, [aid, snum])
+
+    rows = cursor.fetchall()
+    comments = [ {
+        'commenter' : x[0],
+        'rating' : x[1],
+        'text' : x[2],
+        'datetime' : x[3],
+        } for x in rows ]
+
+    return render_to_response('season.html', {
+        'full_name' : row[0],
+        'snum' : snum,
+        'anime' : row[4],
+        'episodes' : row[1],
+        'year' : row[2],
+        'month' : row[3],
+        'comments' : comments,
         }, context_instance=RequestContext(request))
 
 ## -- Songs -- ##

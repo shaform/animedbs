@@ -1,11 +1,21 @@
+{% if cmt.commenter %}
+<tr>
+    <td>Commenter</td>
+    <td>{{ cmt.commenter }}</td>
+</tr>
+{% endif %}
+{% if cmt.season %}
 <tr>
     <td>On</td>
     <td>{{ cmt.season }}</td>
 </tr>
+{% endif %}
+{% if cmt.anime %}
 <tr>
     <td>Season</td>
     <td>{{ cmt.snum }} of {{ cmt.anime }}</td>
 </tr>
+{% endif %}
 <tr>
     <td>Rating</td>
     <td>{{ cmt.rating }}</td>
