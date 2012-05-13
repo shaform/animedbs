@@ -268,7 +268,10 @@ def animes(request):
         ('string','Webpage'),
         ('number','Rating'),
     ]
-    nav_list = [['Season View', reverse('animedbs.views.seasons')],]
+    nav_list = [
+            ['Anime View', None],
+            ['Season View', reverse('animedbs.views.seasons')],
+            ]
 
     class DecimalEncoder(json.JSONEncoder):
         def default(self, o):
@@ -316,15 +319,18 @@ def seasons(request):
         rowlinks.append(reverse('animedbs.views.season', args=[row[7], row[2]]))
     
     cols = [
-        ('string','Full_name'),
+        ('string','Full Name'),
         ('string','Anime'),
         ('number','Season'),
         ('number','Total Episodes'),
-        ('string','Release_time'),
+        ('string','Release Time'),
         ('number','Rating'),
     ]
 
-    nav_list = [['Anime View', reverse('animedbs.views.animes')],]
+    nav_list = [
+            ['Anime View', reverse('animedbs.views.animes')],
+            ['Season View', None],
+            ]
 
 
     class DecimalEncoder(json.JSONEncoder):
@@ -421,9 +427,9 @@ def songs(request):
     cols = [
         ('number', 'Id'),
         ('string', 'Title'),
-        ('string', 'Sing_by'),
-        ('string', 'Featured anime'),
-        ('number', 'Featured season'),
+        ('string', 'Singer'),
+        ('string', 'Featured Anime'),
+        ('number', 'Featured Season'),
         ('string', 'Type'),
     ]
 
