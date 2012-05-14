@@ -15,6 +15,7 @@ from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
 from animedbs.forms import CommentEntity
 from animedbs.forms import AnimeImageEntity
+from animedbs.forms import AnimeCharacterImageEntity
 from animedbs.forms import CharacterEntity
 from django import forms
 from django.template import Template
@@ -418,7 +419,20 @@ def anime(request, aid):
 
     cursor.execute(sql, [aid])
 
-    characters = cursor.fetchall()
+    crows = cursor.fetchall()
+    characters = []
+    for crow in crows:
+        sql = '''
+        SELECT `Address`
+        FROM `CHARACTER_IMAGE`
+        WHERE `Character_anime` = %s
+        AND `Character_name` = %s;
+        '''
+        cursor.execute(sql, [aid, crow[0]])
+        cimages = [ x[0] for x in cursor.fetchall() ]
+        c = list(crow)
+        c.append(cimages)
+        characters.append(c)
 
     nav_list = [
             ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
@@ -489,10 +503,18 @@ def edit_anime_image(request, aid):
     return create_entity(request, AnimeImageEntity, aid)
 
 def edit_anime_character(request, aid, cname):
-    return create_entity(request, CharacterEntity, [aid, cname])
+    nav_list = [
+            ['Edit Image', reverse('animedbs.views.edit_anime_character_image',
+                args=[aid, cname])],
+            ]
+    return create_entity(request, CharacterEntity, [aid, cname], delete=True,
+            nav_list = nav_list)
 
 def create_anime_character(request, aid):
     return create_entity(request, CharacterEntity, [aid, None])
+
+def edit_anime_character_image(request, aid, cname):
+    return create_entity(request, AnimeCharacterImageEntity, [aid, cname])
 
 @login_required
 def seasons(request):
@@ -763,7 +785,7 @@ def edit_seiyu(request, eid):
 
 
 @login_required
-def create_entity(request, Entity, eid=None, delete=False):
+def create_entity(request, Entity, eid=None, delete=False, nav_list=None):
     entity = Entity()
     if eid:
         entity.setId(eid)
@@ -781,4 +803,5 @@ def create_entity(request, Entity, eid=None, delete=False):
         'pagetitle' : entity.title(),
         'form' : entity.form(),
         'delete' : delete,
+        'nav_list' : nav_list,
         }, context_instance=RequestContext(request))

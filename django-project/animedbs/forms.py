@@ -8,6 +8,7 @@ from django.core.validators import MaxLengthValidator
 from django.forms import ValidationError
 from django.shortcuts import redirect
 from django.forms.util import ErrorList
+from django.http import Http404
 
 
 GENDERS = (
@@ -70,6 +71,8 @@ class SeiyuEntity(ObjectEntity):
                 + ' FROM `SEIYU`'
                 + ' WHERE `Id` = %s;', [Id])
         row = cursor.fetchone()
+        if row is None:
+            raise Http404()
         self.initial = {
                 'name' : row[0],
                 'gender' : row[1],
@@ -160,6 +163,8 @@ class SongEntity(ObjectEntity):
                           FROM `SONG`
                           WHERE `Id` = %s;''', [Id])
         row = cursor.fetchone()
+        if row is None:
+            raise Http404()
         self.initial = {
                 'title' : row[0],
                 'featured' : (row[1],row[2]),
@@ -332,6 +337,10 @@ class AnimeImageEntity(ObjectEntity):
 
     def setId(self, Id):
         cursor = connection.cursor()
+        cursor.execute('SELECT * FROM `ANIME` WHERE `Id` = %s;', [Id])
+        row = cursor.fetchone()
+        if row is None:
+            raise Http404()
         cursor.execute('SELECT `Address` FROM `ANIME_IMAGE` WHERE `Anime_id` = %s;', [Id])
         rows = cursor.fetchall()
         urls = [ x[0] for x in rows ]
@@ -364,6 +373,69 @@ class AnimeImageEntity(ObjectEntity):
         '''
         for url in url_list:
             cursor.execute(sql, [self.mId, url])
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        pass
+
+class AnimeCharacterImageEntity(ObjectEntity):
+
+    Form = ImageForm
+    Title = 'Image'
+
+    def setId(self, Ids):
+        cursor = connection.cursor()
+        sql = '''
+        SELECT *
+        FROM `CHARACTER`
+        WHERE `Present_in` = %s AND `Name` = %s;
+        '''
+        cursor.execute(sql, Ids)
+        row = cursor.fetchone()
+        if row is None:
+            raise Http404()
+        sql = '''
+        SELECT `Address`
+        FROM `CHARACTER_IMAGE`
+        WHERE `Character_anime` = %s
+        AND `Character_name` = %s;
+        '''
+        cursor.execute(sql, Ids)
+        rows = cursor.fetchall()
+        urls = [ x[0] for x in rows ]
+        if urls:
+            t = '\n'.join(urls)
+            self.initial = { 'address' : t }
+
+        self.mCname = Ids[1]
+        super(AnimeCharacterImageEntity, self).setId(Ids[0])
+
+    def nav_name(self):
+        return 'nav_none'
+        
+    def redirect(self):
+        return redirect('animedbs.views.edit_anime_character', self.mId, self.mCname)
+
+    def update(self):
+        url_list = self.mForm.cleaned_data['address']
+        cursor = connection.cursor()
+
+        sql = '''
+        DELETE FROM `CHARACTER_IMAGE`
+        WHERE `Character_anime` = %s
+        AND `Character_name` = %s;
+        '''
+        cursor.execute(sql, [self.mId, self.mCname])
+
+        sql = '''
+        INSERT INTO `CHARACTER_IMAGE` (
+        `Character_anime`,
+        `Character_name`,
+        `Address`)
+        VALUES (%s, %s, %s);
+        '''
+        for url in url_list:
+            cursor.execute(sql, [self.mId, self.mCname, url])
         transaction.commit_unless_managed()
 
     def delete(self):
@@ -409,6 +481,8 @@ class CharacterEntity(ObjectEntity):
             '''
             cursor.execute(sql, Ids)
             row = cursor.fetchone()
+            if row is None:
+                raise Http404()
             self.initial = {
                     'name' : row[0],
                     'gender' : row[1],
@@ -422,18 +496,23 @@ class CharacterEntity(ObjectEntity):
         valid = self.mForm.is_valid()
         if valid:
             name = self.mForm.cleaned_data['name']
+            cursor = connection.cursor()
+            sql = '''
+            SELECT * FROM `CHARACTER`
+            WHERE `Present_in` = %s AND `Name` = %s;
+            '''
+            cursor.execute(sql, [self.mId, name])
+            row = cursor.fetchone()
             if self.mCname is None or self.mCname != name:
-                if len(name) > 0:
-                    cursor = connection.cursor()
-                    sql = '''
-                    SELECT * FROM `CHARACTER`
-                    WHERE `Present_in` = %s AND `Name` = %s;
-                    '''
-                    cursor.execute(sql, [self.mId, name])
-                    if cursor.fetchone() is not None:
-                        errors = self.mForm._errors.setdefault('name', ErrorList())
-                        errors.append(u"Duplicate character name")
-                        return False
+                if row is not None:
+                    errors = self.mForm._errors.setdefault('name', ErrorList())
+                    errors.append(u"Duplicate character name.")
+                    return False
+            elif self.mCname is not None:
+                if row is None:
+                    errors = self.mForm._errors.setdefault('name', ErrorList())
+                    errors.append(u"Character no longer exists.")
+                    return False
             return True
         else:
             return False
@@ -471,7 +550,7 @@ class CharacterEntity(ObjectEntity):
     def delete(self):
         if self.mCname:
             cursor = connection.cursor()
-            cursor.execute(''''
+            cursor.execute('''
             DELETE FROM `CHARACTER`
             WHERE `Present_in` = %s
             AND `Name` = %s;
