@@ -2,6 +2,9 @@ import datetime
 from django import forms
 from django.db import connection, transaction
 from django.forms.widgets import Textarea
+from django.core.validators import URLValidator
+from django.core.validators import MaxLengthValidator
+from django.forms import ValidationError
 from django.shortcuts import redirect
 
 GENDERS = (
@@ -286,3 +289,79 @@ class CommentEntity(ObjectEntity):
             '''
             cursor.execute(sql, [self.mCommenter, self.mId, self.mSnum])
             transaction.commit_unless_managed()
+
+class URLListField(forms.CharField):
+    widget = Textarea
+    umax_length = 256
+
+    def getList(self, value):
+        URLs = value.split('\n')
+        URLs = set(URLs)
+        url_list = []
+
+        for url in URLs:
+            url = url.strip()
+            if len(url) > 0:
+                url_list.append(url)
+
+        for url in url_list:
+            if len(url) > self.umax_length:
+                raise ValidationError('Some URL exceed length %d.' % self.umax_length)
+            URLValidator()(url)
+
+        return url_list
+
+    def clean(self, value):
+        super(URLListField, self).clean(value)
+
+        return self.getList(value)
+    def validate(self, value):
+        super(URLListField, self).validate(value)
+        self.getList(value)
+
+class ImageForm(forms.Form):
+    address = URLListField()
+
+class AnimeImageEntity(ObjectEntity):
+
+    Form = ImageForm
+    Title = 'Image'
+
+    def setId(self, Id):
+        cursor = connection.cursor()
+        cursor.execute('SELECT `Address` FROM `ANIME_IMAGE` WHERE `Anime_id` = %s;', [Id])
+        rows = cursor.fetchall()
+        urls = [ x[0] for x in rows ]
+        if urls:
+            t = '\n'.join(urls)
+            self.initial = { 'address' : t }
+        super(AnimeImageEntity, self).setId(Id)
+
+    def nav_name(self):
+        return 'nav_none'
+        
+    def redirect(self):
+        return redirect('animedbs.views.anime_images', self.mId)
+
+    def update(self):
+        url_list = self.mForm.cleaned_data['address']
+        cursor = connection.cursor()
+
+        sql = '''
+        DELETE FROM `ANIME_IMAGE`
+        WHERE `Anime_id` = %s;
+        '''
+        cursor.execute(sql, [self.mId])
+
+        sql = '''
+        INSERT INTO `ANIME_IMAGE` (
+        `Anime_id`,
+        `Address`)
+        VALUES (%s, %s);
+        '''
+        for url in url_list:
+            cursor.execute(sql, [self.mId, url])
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        pass

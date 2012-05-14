@@ -8,11 +8,15 @@ from django.http import Http404
 from django.shortcuts import render_to_response
 from django.shortcuts import redirect
 from django.template import RequestContext
+from django.template import Context
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
 from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
 from animedbs.forms import CommentEntity
+from animedbs.forms import AnimeImageEntity
+from django import forms
+from django.template import Template
 
 def login_required(function):
     def _dec(view_func):
@@ -354,7 +358,8 @@ def anime(request, aid):
     sql = '''
     SELECT `Full_name`, `Total_episodes`, `Release_year`, `Release_month`, `Title`, `Series_num`
     FROM `SEASON`, `ANIME`
-    WHERE `Part_of` = %s AND `Id` = `Part_of`;
+    WHERE `Part_of` = %s AND `Id` = `Part_of`
+    ORDER BY `Series_num`;
     '''
 
     cursor.execute(sql, [aid])
@@ -417,6 +422,7 @@ def anime(request, aid):
     nav_list = [
             ['Anime View', None],
             ['Season View', reverse('animedbs.views.seasons')],
+            ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
             ]
 
     class DecimalEncoder(json.JSONEncoder):
@@ -435,6 +441,50 @@ def anime(request, aid):
         'images' : images,
         'characters' : characters,
         }, context_instance=RequestContext(request))
+
+@login_required
+def anime_images(request, aid):
+    cursor = connection.cursor()
+    sql = '''
+    SELECT `Title`
+    FROM `ANIME`
+    WHERE `Id` = %s;
+    '''
+    cursor.execute(sql, [aid])
+    
+    row = cursor.fetchone()
+
+    if row is None:
+        raise Http404()
+
+    anime = row[0]
+
+    sql = '''
+    SELECT `Address`
+    FROM `ANIME_IMAGE`
+    WHERE `Anime_id` = %s;
+    '''
+
+    cursor.execute(sql, [aid])
+    rows = cursor.fetchall()
+
+    cols = [
+        ('string','Web_address'),
+    ]
+    nav_list = [
+            ['Edit List', reverse('animedbs.views.edit_anime_image', args=[aid])],
+            ]
+
+    return render_to_response('table.html', {
+        'nav_animes' : True,
+        'pagetitle' : 'Images of %s' % anime,
+        'cols' : cols,
+        'rows' : json.dumps(rows),
+        'nav_list' : nav_list,
+        }, context_instance=RequestContext(request))
+
+def edit_anime_image(request, aid):
+    return create_entity(request, AnimeImageEntity, aid)
 
 @login_required
 def seasons(request):
@@ -724,4 +774,3 @@ def create_entity(request, Entity, eid=None, delete=False):
         'form' : entity.form(),
         'delete' : delete,
         }, context_instance=RequestContext(request))
-

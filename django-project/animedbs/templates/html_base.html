@@ -20,6 +20,15 @@
         {% endblock %}
         <script src="{{ STATIC_URL }}js/jquery-1.7.2.min.js"></script>
         <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+        <script src="{{ STATIC_URL }}js/jquery-ui-1.7.2.custom.min.js"></script>
+        <script src="{{ STATIC_URL }}js/jquery-dynamic-form.js"></script>
+        <script type="text/javascript">
+            $(document).ready (function() {
+                    $("#duplicate").dynamicForm("#plus",
+                        "#minus",
+                        {limit:6, createColor:"yellow", removeColor:"red"});
+                    });
+        </script>
         {% block tailscript %}
         {% endblock %}
     </body>
