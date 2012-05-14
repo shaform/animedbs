@@ -15,6 +15,7 @@ from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
 from animedbs.forms import CommentEntity
 from animedbs.forms import AnimeImageEntity
+from animedbs.forms import CharacterEntity
 from django import forms
 from django.template import Template
 
@@ -420,9 +421,8 @@ def anime(request, aid):
     characters = cursor.fetchall()
 
     nav_list = [
-            ['Anime View', None],
-            ['Season View', reverse('animedbs.views.seasons')],
             ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
+            ['Add Character', reverse('animedbs.views.create_anime_character', args=[aid])],
             ]
 
     class DecimalEncoder(json.JSONEncoder):
@@ -433,6 +433,7 @@ def anime(request, aid):
 
     return render_to_response('anime.html', {
         'nav_animes' : True,
+        'anime_id' : aid,
         'pagetitle' : row[0],
         'cols' : cols,
         'rows' : json.dumps([row], cls=DecimalEncoder),
@@ -473,6 +474,7 @@ def anime_images(request, aid):
     ]
     nav_list = [
             ['Edit List', reverse('animedbs.views.edit_anime_image', args=[aid])],
+            ['Back to Anime', reverse('animedbs.views.anime', args=[aid])],
             ]
 
     return render_to_response('table.html', {
@@ -485,6 +487,12 @@ def anime_images(request, aid):
 
 def edit_anime_image(request, aid):
     return create_entity(request, AnimeImageEntity, aid)
+
+def edit_anime_character(request, aid, cname):
+    return create_entity(request, CharacterEntity, [aid, cname])
+
+def create_anime_character(request, aid):
+    return create_entity(request, CharacterEntity, [aid, None])
 
 @login_required
 def seasons(request):
@@ -540,7 +548,7 @@ def seasons(request):
 
     return render_to_response('table.html', {
         'nav_animes' : True,
-        'pagetitle' : 'Seasons',
+        'pagetitle' : 'Animes',
         'cols' : cols,
         'rows' : json.dumps(rows, cls=DecimalEncoder),
         'nav_list' : nav_list,

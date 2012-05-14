@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 import datetime
 from django import forms
 from django.db import connection, transaction
@@ -6,6 +7,8 @@ from django.core.validators import URLValidator
 from django.core.validators import MaxLengthValidator
 from django.forms import ValidationError
 from django.shortcuts import redirect
+from django.forms.util import ErrorList
+
 
 GENDERS = (
         ('male', 'Male'),
@@ -365,3 +368,113 @@ class AnimeImageEntity(ObjectEntity):
 
     def delete(self):
         pass
+
+class CharacterForm(forms.Form):
+    name = forms.CharField(max_length=30)
+    gender = forms.ChoiceField(choices=(
+        ('female', 'Female'),
+        ('male', 'Male'),
+        (u'秀吉', u'秀吉'),
+        ))
+    voiced_by = forms.ChoiceField()
+    desc = forms.CharField(max_length=21845, widget=Textarea, required=False)
+
+class CharacterEntity(ObjectEntity):
+
+    Form = CharacterForm
+    Title = 'Character'
+
+    def setChoices(self):
+        self.mForm.fields['voiced_by'].choices = self.seiyu_choices
+
+    def __init__(self):
+        super(CharacterEntity, self).__init__()
+        cursor = connection.cursor()
+        cursor.execute('SELECT `Id`, `Name` FROM `SEIYU`;')
+        self.seiyu_choices = cursor.fetchall()
+        self.setChoices()
+
+    def parse(self, data):
+        super(CharacterEntity, self).parse(data)
+        self.setChoices()
+
+    def setId(self, Ids):
+        cursor = connection.cursor()
+        self.mCname = Ids[1]
+        if Ids[1]:
+            sql = '''
+            SELECT `Name`, `Gender`, `Voiced_by`, `Description`
+            FROM `CHARACTER`
+            WHERE `Present_in` = %s AND `Name` = %s;
+            '''
+            cursor.execute(sql, Ids)
+            row = cursor.fetchone()
+            self.initial = {
+                    'name' : row[0],
+                    'gender' : row[1],
+                    'voiced_by' : row[2],
+                    'desc' : row[3],
+                    }
+        super(CharacterEntity, self).setId(Ids[0])
+        self.setChoices()
+
+    def is_valid(self):
+        valid = self.mForm.is_valid()
+        if valid:
+            name = self.mForm.cleaned_data['name']
+            if self.mCname is None or self.mCname != name:
+                if len(name) > 0:
+                    cursor = connection.cursor()
+                    sql = '''
+                    SELECT * FROM `CHARACTER`
+                    WHERE `Present_in` = %s AND `Name` = %s;
+                    '''
+                    cursor.execute(sql, [self.mId, name])
+                    if cursor.fetchone() is not None:
+                        errors = self.mForm._errors.setdefault('name', ErrorList())
+                        errors.append(u"Duplicate character name")
+                        return False
+            return True
+        else:
+            return False
+
+    def nav_name(self):
+        return 'nav_animes'
+        
+    def redirect(self):
+        return redirect('animedbs.views.anime', self.mId)
+
+    def update(self):
+        cursor = connection.cursor()
+        name = self.mForm.cleaned_data['name']
+        gender = self.mForm.cleaned_data['gender']
+        voiced_by = self.mForm.cleaned_data['voiced_by']
+        desc = self.mForm.cleaned_data['desc']
+        if self.mCname:
+            sql = '''
+            UPDATE `CHARACTER` SET `Name` = %s,
+            `Gender` = %s,
+            `Voiced_by` = %s,
+            `Description` = %s
+            WHERE `Name` = %s;
+            '''
+            cursor.execute(sql, [name, gender, voiced_by, desc, self.mCname])
+        else:
+            sql = '''
+            INSERT INTO `CHARACTER` (`Present_in`, `Name`, `Gender`, `Voiced_by`, `Description`)
+            VALUES (%s, %s, %s, %s, %s);
+            '''
+            cursor.execute(sql, [self.mId, name, gender, voiced_by, desc])
+
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        if self.mCname:
+            cursor = connection.cursor()
+            cursor.execute(''''
+            DELETE FROM `CHARACTER`
+            WHERE `Present_in` = %s
+            AND `Name` = %s;
+            ''', [self.mId, self.mCname])
+            transaction.commit_unless_managed()
+            self.mCname = None

@@ -15,12 +15,15 @@
         <td>Gender</td>
         <td>Voiced By</td>
         <td>Description</td>
+        <td>-</td>
     </tr>
     {% for c in characters %}
     <tr>
         <td>{{ c.0 }}</td>
         <td>{{ c.1 }}</td>
         <td>{{ c.2 }}</td>
+        <td>{{ c.3 }}</td>
+        <td><a href="{% url animedbs.views.edit_anime_character anime_id c.0 %}">edit</a></td>
     </tr>
     {% endfor %}
 </table>
