@@ -28,3 +28,10 @@
     <td>Text</td>
     <td>{{ cmt.text }}</td>
 </tr>
+{% if request.session.user_id == cmt.commenter_id %}
+<tr>
+    <td colspan="2">
+        <a href="{% url animedbs.views.comment cmt.anime_id cmt.snum%}">Edit</a>
+    </td>
+</tr>
+{% endif %}

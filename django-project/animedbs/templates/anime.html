@@ -1,0 +1,35 @@
+{% extends 'table.html' %}
+{% block content %}
+<div id="table_div"></div>
+{% if images %}
+<h2>Images</h2>
+{% for image in images %}
+<img src="{{ image }}"/>
+{% endfor %}
+{% endif %}
+{% if characters %}
+<h2>Characters</h2>
+<table>
+    <tr>
+        <td>Name</td>
+        <td>Gender</td>
+        <td>Voiced By</td>
+        <td>Description</td>
+    </tr>
+    {% for c in characters %}
+    <tr>
+        <td>{{ c.0 }}</td>
+        <td>{{ c.1 }}</td>
+        <td>{{ c.2 }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+<p></p>
+{% if seasons %}
+<h2>Seasons</h2>
+{% for season in seasons %}
+{% include 'season_object.html' %}
+{% endfor %}
+{% endif %}
+{% endblock %}

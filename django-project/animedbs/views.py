@@ -139,6 +139,8 @@ def profile(request):
         comments.append({
             'anime' : anime,
             'season' : season,
+            'anime_id' : cmt[0],
+            'commenter_id' : user_id,
             'snum' : cmt[1],
             'rating' : cmt[2],
             'text' : cmt[3],
@@ -262,7 +264,7 @@ def search(request):
 def animes(request):
     cursor = connection.cursor()
     sql = '''
-    SELECT `Title`, `Author`, `Web_address`, `Avg_rating`
+    SELECT `Title`, `Author`, `Web_address`, `Avg_rating`, `Id`
     FROM (
         SELECT `Id`, `Title`, `Authored_by`, `Web_address` FROM `ANIME`
     ) AS t1
@@ -281,6 +283,12 @@ def animes(request):
     cursor.execute(sql)
     
     rows = cursor.fetchall()
+
+    rowlinks = []
+    for row in rows:
+        rowlinks.append(reverse('animedbs.views.anime', args=[row[4]]))
+
+    rows = [ x[0:4] for x in rows ]
     
     cols = [
         ('string','Title'),
@@ -305,6 +313,127 @@ def animes(request):
         'cols' : cols,
         'rows' : json.dumps(rows, cls=DecimalEncoder),
         'nav_list' : nav_list,
+        'rowlinks' : json.dumps(rowlinks),
+        }, context_instance=RequestContext(request))
+
+@login_required
+def anime(request, aid):
+    cursor = connection.cursor()
+    sql = '''
+    SELECT `Title`, `Author`, `Web_address`, `Avg_rating`
+    FROM (
+        SELECT `Id`, `Title`, `Authored_by`, `Web_address` FROM `ANIME`
+    ) AS t1
+    
+    LEFT JOIN (
+        SELECT `Id` AS `Authored_by`, `Name` AS `Author` FROM `AUTHOR`
+    ) AS t2 USING(`Authored_by`)
+
+    LEFT JOIN (
+        SELECT `Commentee_anime` AS `Id`,
+               AVG(`Rating`) AS `Avg_rating`
+               FROM `COMMENTS_ON`
+               GROUP BY `Id`
+    ) AS t3 USING(`Id`)
+    WHERE `Id` = %s;
+    '''
+    cursor.execute(sql, [aid])
+    
+    row = cursor.fetchone()
+
+    if row is None:
+        raise Http404()
+    
+    cols = [
+        ('string','Title'),
+        ('string','Author'),
+        ('string','Webpage'),
+        ('number','Rating'),
+    ]
+
+    sql = '''
+    SELECT `Full_name`, `Total_episodes`, `Release_year`, `Release_month`, `Title`, `Series_num`
+    FROM `SEASON`, `ANIME`
+    WHERE `Part_of` = %s AND `Id` = `Part_of`;
+    '''
+
+    cursor.execute(sql, [aid])
+
+    rows = cursor.fetchall()
+    seasons = []
+
+    for season in rows:
+        sql = '''
+        SELECT `Nickname`, `Rating`, `Text`, `Datetime`, `Id`
+        FROM `USER`, `COMMENTS_ON`
+        WHERE `Commentee_anime` = %s
+        AND `Commentee_season` = %s
+        AND `Commenter` = `Id`;
+        '''
+
+        cursor.execute(sql, [aid, season[5]])
+
+        crows = cursor.fetchall()
+        comments = [ {
+            'commenter' : x[0],
+            'commenter_id' : x[4],
+            'anime_id' : aid,
+            'snum' : season[5],
+            'rating' : x[1],
+            'text' : x[2],
+            'datetime' : x[3],
+            } for x in crows ]
+
+        season = {
+                'full_name' : season[0],
+                'snum' : season[5],
+                'anime' : season[4],
+                'episodes' : season[1],
+                'year' : season[2],
+                'month' : season[3],
+                'comments' : comments,
+                }
+        seasons.append(season)
+
+    sql = '''
+    SELECT `Address`
+    FROM `ANIME_IMAGE`
+    WHERE `Anime_id` = %s;
+    '''
+
+    cursor.execute(sql, [aid])
+    images = [ x[0] for x in cursor.fetchall() ]
+
+    sql = '''
+    SELECT C.`Name`, C.`Gender`, S.`Name`, C.`Description`
+    FROM `CHARACTER` AS C, `SEIYU` AS S
+    WHERE `Present_in` = %s AND S.`Id` = `Voiced_by`;
+    '''
+
+    cursor.execute(sql, [aid])
+
+    characters = cursor.fetchall()
+
+    nav_list = [
+            ['Anime View', None],
+            ['Season View', reverse('animedbs.views.seasons')],
+            ]
+
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return float('%.2f' % o)
+            return super(DecimalEncoder, self).default(o)
+
+    return render_to_response('anime.html', {
+        'nav_animes' : True,
+        'pagetitle' : row[0],
+        'cols' : cols,
+        'rows' : json.dumps([row], cls=DecimalEncoder),
+        'nav_list' : nav_list,
+        'seasons' : seasons,
+        'images' : images,
+        'characters' : characters,
         }, context_instance=RequestContext(request))
 
 @login_required
@@ -388,7 +517,7 @@ def season(request, aid, snum):
 
 
     sql = '''
-    SELECT `Nickname`, `Rating`, `Text`, `Datetime`
+    SELECT `Nickname`, `Rating`, `Text`, `Datetime`, `Id`
     FROM `USER`, `COMMENTS_ON`
     WHERE `Commentee_anime` = %s
     AND `Commentee_season` = %s
@@ -400,12 +529,15 @@ def season(request, aid, snum):
     rows = cursor.fetchall()
     comments = [ {
         'commenter' : x[0],
+        'commenter_id' : x[4],
+        'anime_id' : aid,
+        'snum' : snum,
         'rating' : x[1],
         'text' : x[2],
         'datetime' : x[3],
         } for x in rows ]
 
-    nav_list = [['edit_comment', reverse('animedbs.views.comment', args=[aid, snum])],]
+    nav_list = [['Rate it!', reverse('animedbs.views.comment', args=[aid, snum])],]
 
     return render_to_response('season.html', {
         'full_name' : row[0],
