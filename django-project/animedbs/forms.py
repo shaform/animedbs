@@ -256,7 +256,7 @@ class CommentEntity(ObjectEntity):
         super(CommentEntity, self).setId(Ids[0])
 
     def nav_name(self):
-        return 'nav_none'
+        return 'nav_animes'
         
     def redirect(self):
         return redirect('animedbs.views.season', self.mId, self.mSnum)
@@ -337,7 +337,8 @@ class AnimeImageEntity(ObjectEntity):
     Title = 'Image'
 
     def setId(self, Id):
-        if AnimeXModel.getOneXModel([Id]) is None:
+        anime = AnimeXModel.getOneXModel([Id])
+        if anime is None:
             raise Http404()
         cursor = connection.cursor()
         cursor.execute('SELECT `Address` FROM `ANIME_IMAGE` WHERE `Anime_id` = %s;', [Id])
@@ -346,10 +347,11 @@ class AnimeImageEntity(ObjectEntity):
         if urls:
             t = '\n'.join(urls)
             self.initial = { 'address' : t }
+        self.entity_title = 'Edit images of %s' % anime.Title
         super(AnimeImageEntity, self).setId(Id)
 
     def nav_name(self):
-        return 'nav_none'
+        return 'nav_animes'
         
     def redirect(self):
         return redirect('animedbs.views.anime_images', self.mId)
@@ -410,7 +412,7 @@ class AnimeCharacterImageEntity(ObjectEntity):
         super(AnimeCharacterImageEntity, self).setId(Ids[0])
 
     def nav_name(self):
-        return 'nav_none'
+        return 'nav_animes'
         
     def redirect(self):
         return redirect('animedbs.views.edit_anime_character', self.mId, self.mCname)
@@ -822,7 +824,7 @@ class AuthorEntity(ObjectEntity):
         super(AuthorEntity, self).setId(Id)
 
     def nav_name(self):
-        return 'nav_author'
+        return 'nav_authors'
         
     def redirect(self):
         if self.mId:
