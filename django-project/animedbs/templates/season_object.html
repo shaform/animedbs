@@ -3,7 +3,8 @@
 {% if anime_id %}
 <tr>
     <td colspan="2">
-        <a href="{% url animedbs.views.edit_season anime_id season.snum %}">Edit</a>
+        <a href="{% url animedbs.views.edit_season anime_id season.snum %}">Edit</a> | 
+        <a href="{% url animedbs.views.comment anime_id season.snum %}">Rate</a>
     </td>
 </tr>
 {% endif %}

@@ -561,7 +561,7 @@ class SeasonForm(forms.Form):
     series_num = forms.IntegerField(min_value=1)
     full_name = forms.CharField(max_length=100)
     total_episodes = forms.IntegerField(min_value=1)
-    release_year = forms.IntegerField(min_value=0)
+    release_year = forms.IntegerField(min_value=0, max_value=2020)
     release_month = forms.IntegerField(min_value=1, max_value=12)
 
 class SeasonEntity(ObjectEntity):
@@ -664,3 +664,104 @@ class SeasonEntity(ObjectEntity):
             cursor.execute(sql, [self.mId, self.mSnum])
             transaction.commit_unless_managed()
             self.mSnum = None
+
+class AnimeForm(forms.Form):
+    title = forms.CharField(max_length=100)
+    authored_by = forms.ChoiceField()
+    desc = forms.CharField(max_length=21845, widget=Textarea, required=False)
+    address = forms.URLField(max_length=512, required=False)
+
+class AnimeEntity(ObjectEntity):
+
+    Form = AnimeForm
+    Title = 'Create Anime'
+
+    def setChoices(self):
+        self.mForm.fields['authored_by'].choices = self.author_choices
+
+    def __init__(self):
+        super(AnimeEntity, self).__init__()
+        cursor = connection.cursor()
+        cursor.execute('SELECT `Id`, `Name` FROM `AUTHOR`;')
+        self.author_choices = cursor.fetchall()
+        self.setChoices()
+
+    def parse(self, data):
+        super(AnimeEntity, self).parse(data)
+        self.setChoices()
+
+    def setId(self, Id):
+        anime = AnimeXModel.getOneXModel([Id])
+        if anime is None:
+            raise Http404()
+        self.initial = {
+                'title' : anime.Title,
+                'authored_by' : anime.Authored_by,
+                'desc' : anime.Description,
+                'address' : anime.Web_address
+                }
+        self.entity_title = anime.Title
+        super(AnimeEntity, self).setId(Id)
+        self.setChoices()
+
+    def nav_name(self):
+        return 'nav_animes'
+        
+    def redirect(self):
+        if self.mId:
+            return redirect('animedbs.views.anime', self.mId)
+        else:
+            return redirect('animedbs.views.animes')
+
+    def is_valid(self):
+        valid = self.mForm.is_valid()
+        if valid:
+            title = self.mForm.cleaned_data['title']
+            cursor = connection.cursor()
+            sql = '''
+            SELECT `Id` FROM `ANIME`
+            WHERE `Title` = %s;
+            '''
+            cursor.execute(sql, [title])
+            row = cursor.fetchone()
+            if (self.mId is None and row is not None) or (
+                    self.mId is not None and row is not None and self.mId != row[0]):
+                errors = self.mForm._errors.setdefault('title', ErrorList())
+                errors.append(u"Duplicate title.")
+                return False
+            return True
+        else:
+            return False
+    def update(self):
+        title = self.mForm.cleaned_data['title']
+        authored_by = self.mForm.cleaned_data['authored_by']
+        desc = self.mForm.cleaned_data['desc']
+        address = self.mForm.cleaned_data['address']
+
+        cursor = connection.cursor()
+        if self.mId:
+            sql = '''
+            UPDATE `ANIME`
+            SET `Title` = %s, `Authored_by` = %s,
+            `Description` = %s, `Web_address` = %s
+            WHERE `Id` = %s;
+            '''
+            cursor.execute(sql,
+                    [title, authored_by, desc, address, self.mId])
+        else:
+            sql = '''
+            INSERT INTO `ANIME`
+            (`Title`, `Authored_by`, `Description`, `Web_address`)
+            VALUES (%s, %s, %s, %s);
+            '''
+            cursor.execute(sql,
+                    [title, authored_by, desc, address])
+
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        if self.mId:
+            cursor = connection.cursor()
+            cursor.execute('DELETE FROM `ANIME` WHERE `Id` = %s;', [self.mId])
+            transaction.commit_unless_managed()
+            self.mId = None

@@ -15,6 +15,7 @@ from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
 from animedbs.forms import CommentEntity
 from animedbs.forms import AnimeImageEntity
+from animedbs.forms import AnimeEntity
 from animedbs.forms import AnimeCharacterImageEntity
 from animedbs.forms import CharacterEntity
 from animedbs.forms import SeasonEntity
@@ -306,6 +307,7 @@ def animes(request):
     nav_list = [
             ['Anime View', None],
             ['Season View', reverse('animedbs.views.seasons')],
+            ['Create Anime', reverse('animedbs.views.create_anime')],
             ]
 
     class DecimalEncoder(json.JSONEncoder):
@@ -436,6 +438,7 @@ def anime(request, aid):
         characters.append(c)
 
     nav_list = [
+            ['Edit Anime', reverse('animedbs.views.edit_anime', args=[aid])],
             ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
             ['Add Character', reverse('animedbs.views.create_anime_character', args=[aid])],
             ['Add Season', reverse('animedbs.views.create_season', args=[aid])],
@@ -458,6 +461,12 @@ def anime(request, aid):
         'images' : images,
         'characters' : characters,
         }, context_instance=RequestContext(request))
+
+def edit_anime(request, aid):
+    return create_entity(request, AnimeEntity, int(aid), delete=True)
+
+def create_anime(request):
+    return create_entity(request, AnimeEntity)
 
 @login_required
 def anime_images(request, aid):
@@ -725,6 +734,9 @@ def authors(request):
         'author_list' : author_list,
         }, context_instance=RequestContext(request))
 
+@login_required
+def author(request, arid):
+    pass
 
 ## -- Seiyus -- ##
 @login_required
