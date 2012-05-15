@@ -19,6 +19,7 @@ from animedbs.forms import AnimeEntity
 from animedbs.forms import AnimeCharacterImageEntity
 from animedbs.forms import CharacterEntity
 from animedbs.forms import SeasonEntity
+from animedbs.forms import AuthorEntity
 from django import forms
 from django.template import Template
 
@@ -714,29 +715,60 @@ def create_song(request):
 @login_required
 def authors(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT `Id`, `Name`, `Description`'
-            + ' FROM `AUTHOR`;')
-    rows = cursor.fetchall()
-    author_list = []
+    cursor.execute('SELECT * FROM `AUTHOR`;')
 
+    rows = cursor.fetchall()
+
+    cols = [
+        ('number','Id'),
+        ('string','Name'),
+        ('string','Description'),
+    ]
+
+    rowlinks = []
     for row in rows:
-        cursor.execute('SELECT `Title`'
-                + ' FROM `ANIME` WHERE `Authored_by` = %s;',
-                [row[0]])
-        author_list.append({
-            'id' : row[0],
-            'name' : row[1],
-            'desc' : row[2],
-            'anime_list' : cursor.fetchall(),
-            })
-    return render_to_response('authors.html', {
-        'nav_authors' : True,
-        'author_list' : author_list,
+        rowlinks.append(reverse('animedbs.views.author', args=[row[0]]))
+
+    return render_to_response('table.html', {
+        'nav_author' : True,
+        'pagetitle' : 'Authors',
+        'cols' : cols,
+        'rows' : json.dumps(rows),
+        'rowlinks' : json.dumps(rowlinks),
         }, context_instance=RequestContext(request))
 
 @login_required
 def author(request, arid):
-    pass
+    cursor = connection.cursor()
+    cursor.execute('SELECT `Name`, `Description`'
+            + ' FROM `AUTHOR` WHERE `Id` = %s;', [arid])
+    row = cursor.fetchone()
+    if row is None:
+        raise Http404()
+
+    author_list = []
+
+    cursor.execute('SELECT `Title`'
+            + ' FROM `ANIME` WHERE `Authored_by` = %s;',
+            [arid])
+    author_list.append({
+        'id' : arid,
+        'name' : row[0],
+        'desc' : row[1],
+        'anime_list' : cursor.fetchall(),
+        })
+
+    nav_list = [
+            ['Edit Author', reverse('animedbs.views.edit_author', args=[arid])],
+            ]
+    return render_to_response('authors.html', {
+        'nav_authors' : True,
+        'author_list' : author_list,
+        'nav_list' : nav_list,
+        }, context_instance=RequestContext(request))
+
+def edit_author(request, arid):
+    return create_entity(request, AuthorEntity, int(arid))
 
 ## -- Seiyus -- ##
 @login_required

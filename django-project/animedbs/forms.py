@@ -528,6 +528,8 @@ class CharacterEntity(ObjectEntity):
         gender = self.mForm.cleaned_data['gender']
         voiced_by = self.mForm.cleaned_data['voiced_by']
         desc = self.mForm.cleaned_data['desc']
+        if desc == '':
+            desc = None
         if self.mCname:
             sql = '''
             UPDATE `CHARACTER` SET `Name` = %s,
@@ -697,7 +699,6 @@ class AnimeEntity(ObjectEntity):
         self.setChoices()
 
     def parse(self, data):
-        print data['authored_by']
         if 'authored_by' not in data or data['authored_by'] != '-':
             data = data.copy()
             data['new_author_name'] = 'no_new_author'
@@ -751,6 +752,8 @@ class AnimeEntity(ObjectEntity):
         authored_by = self.mForm.cleaned_data['authored_by']
         new_author_name = self.mForm.cleaned_data['new_author_name']
         desc = self.mForm.cleaned_data['desc']
+        if desc == '':
+            desc = None
         address = self.mForm.cleaned_data['address']
 
         cursor = connection.cursor()
@@ -792,3 +795,50 @@ class AnimeEntity(ObjectEntity):
             self.mId = None
             check_authors()
             transaction.commit_unless_managed()
+
+class AuthorForm(forms.Form):
+    name = forms.CharField(max_length=30)
+    desc = forms.CharField(max_length=21845, widget=Textarea, required=False)
+
+class AuthorEntity(ObjectEntity):
+
+    Form = AuthorForm
+    Title = 'Author'
+
+    def setId(self, Id):
+        cursor = connection.cursor()
+        cursor.execute('SELECT `Name`, `Description`'
+                + ' FROM `AUTHOR`'
+                + ' WHERE `Id` = %s;', [Id])
+        row = cursor.fetchone()
+        if row is None:
+            raise Http404()
+        self.initial = {
+                'name' : row[0],
+                'desc' : row[1],
+                }
+        self.entity_title = row[0]
+
+        super(AuthorEntity, self).setId(Id)
+
+    def nav_name(self):
+        return 'nav_author'
+        
+    def redirect(self):
+        if self.mId:
+            return redirect('animedbs.views.author', self.mId)
+        else:
+            return redirect('animedbs.views.authors')
+
+    def update(self):
+        cursor = connection.cursor()
+        name = self.mForm.cleaned_data['name']
+        desc = self.mForm.cleaned_data['desc']
+        if desc == '':
+            desc = None
+        if self.mId:
+            cursor.execute('UPDATE `AUTHOR` SET `Name` = %s,'
+                    + ' `Description` = %s'
+                    + ' WHERE `Id` = %s;',
+                    [name, desc, self.mId])
+        transaction.commit_unless_managed()
