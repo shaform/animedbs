@@ -329,7 +329,7 @@ class URLListField(forms.CharField):
         self.getList(value)
 
 class ImageForm(forms.Form):
-    address = URLListField()
+    address = URLListField(required=False)
 
 class AnimeImageEntity(ObjectEntity):
 
@@ -665,9 +665,19 @@ class SeasonEntity(ObjectEntity):
             transaction.commit_unless_managed()
             self.mSnum = None
 
+def check_authors():
+    sql = '''
+    DELETE FROM `AUTHOR`
+    WHERE `Id` NOT IN ( SELECT `Authored_by` FROM `ANIME`);
+    '''
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    transaction.commit_unless_managed()
+
 class AnimeForm(forms.Form):
     title = forms.CharField(max_length=100)
     authored_by = forms.ChoiceField()
+    new_author_name = forms.CharField(max_length=30)
     desc = forms.CharField(max_length=21845, widget=Textarea, required=False)
     address = forms.URLField(max_length=512, required=False)
 
@@ -683,10 +693,14 @@ class AnimeEntity(ObjectEntity):
         super(AnimeEntity, self).__init__()
         cursor = connection.cursor()
         cursor.execute('SELECT `Id`, `Name` FROM `AUTHOR`;')
-        self.author_choices = cursor.fetchall()
+        self.author_choices = list(cursor.fetchall()) + [('-', 'Create New')]
         self.setChoices()
 
     def parse(self, data):
+        print data['authored_by']
+        if 'authored_by' not in data or data['authored_by'] != '-':
+            data = data.copy()
+            data['new_author_name'] = 'no_new_author'
         super(AnimeEntity, self).parse(data)
         self.setChoices()
 
@@ -735,10 +749,21 @@ class AnimeEntity(ObjectEntity):
     def update(self):
         title = self.mForm.cleaned_data['title']
         authored_by = self.mForm.cleaned_data['authored_by']
+        new_author_name = self.mForm.cleaned_data['new_author_name']
         desc = self.mForm.cleaned_data['desc']
         address = self.mForm.cleaned_data['address']
 
         cursor = connection.cursor()
+
+        if authored_by == '-':
+            sql = '''
+            INSERT INTO `AUTHOR` (`Name`)
+            VALUES (%s);
+            '''
+            cursor.execute(sql, [new_author_name])
+            cursor.execute('SELECT LAST_INSERT_ID();')
+            authored_by = cursor.fetchone()[0]
+
         if self.mId:
             sql = '''
             UPDATE `ANIME`
@@ -757,11 +782,13 @@ class AnimeEntity(ObjectEntity):
             cursor.execute(sql,
                     [title, authored_by, desc, address])
 
+        check_authors()
         transaction.commit_unless_managed()
 
     def delete(self):
         if self.mId:
             cursor = connection.cursor()
             cursor.execute('DELETE FROM `ANIME` WHERE `Id` = %s;', [self.mId])
-            transaction.commit_unless_managed()
             self.mId = None
+            check_authors()
+            transaction.commit_unless_managed()
