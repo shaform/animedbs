@@ -9,6 +9,7 @@ from django.forms import ValidationError
 from django.shortcuts import redirect
 from django.forms.util import ErrorList
 from django.http import Http404
+from animedbs.xmodels import AnimeXModel
 
 
 GENDERS = (
@@ -226,7 +227,7 @@ class CommentForm(forms.Form):
         (4,4),
         (5,5),
         ))
-    text = forms.CharField(max_length=1000)
+    text = forms.CharField(max_length=1000, widget=Textarea)
 
 class CommentEntity(ObjectEntity):
 
@@ -336,11 +337,9 @@ class AnimeImageEntity(ObjectEntity):
     Title = 'Image'
 
     def setId(self, Id):
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM `ANIME` WHERE `Id` = %s;', [Id])
-        row = cursor.fetchone()
-        if row is None:
+        if AnimeXModel.getOneXModel([Id]) is None:
             raise Http404()
+        cursor = connection.cursor()
         cursor.execute('SELECT `Address` FROM `ANIME_IMAGE` WHERE `Anime_id` = %s;', [Id])
         rows = cursor.fetchall()
         urls = [ x[0] for x in rows ]
@@ -557,3 +556,111 @@ class CharacterEntity(ObjectEntity):
             ''', [self.mId, self.mCname])
             transaction.commit_unless_managed()
             self.mCname = None
+
+class SeasonForm(forms.Form):
+    series_num = forms.IntegerField(min_value=1)
+    full_name = forms.CharField(max_length=100)
+    total_episodes = forms.IntegerField(min_value=1)
+    release_year = forms.IntegerField(min_value=0)
+    release_month = forms.IntegerField(min_value=1, max_value=12)
+
+class SeasonEntity(ObjectEntity):
+
+    Form = SeasonForm
+    Title = 'Season'
+
+    def setId(self, Ids):
+        self.mSnum = Ids[1]
+        if len(Ids) == 2 and Ids[1]:
+            cursor = connection.cursor()
+            sql = '''
+            SELECT `Full_name`, `Total_episodes`, `Release_year`, `Release_month`
+            FROM `SEASON`
+            WHERE `Part_of` = %s AND `Series_num` = %s;
+            '''
+            cursor.execute(sql, Ids)
+            row = cursor.fetchone()
+            if row is None:
+                raise Http404()
+            self.initial = {
+                    'series_num' : Ids[1],
+                    'full_name' : row[0],
+                    'total_episodes' : row[1],
+                    'release_year' : row[2],
+                    'release_month' : row[3],
+                    }
+            self.entity_title = row[0]
+        super(SeasonEntity, self).setId(Ids[0])
+
+    def is_valid(self):
+        valid = self.mForm.is_valid()
+        if valid:
+            series_num = self.mForm.cleaned_data['series_num']
+            cursor = connection.cursor()
+            sql = '''
+            SELECT * FROM `SEASON`
+            WHERE `Part_of` = %s AND `Series_num` = %s;
+            '''
+            cursor.execute(sql, [self.mId, series_num])
+            row = cursor.fetchone()
+            if self.mSnum is None or self.mSnum != series_num:
+                if row is not None:
+                    errors = self.mForm._errors.setdefault('series_num', ErrorList())
+                    errors.append(u"Duplicate series number.")
+                    return False
+            elif self.mSnum is not None:
+                if row is None:
+                    errors = self.mForm._errors.setdefault('series_num', ErrorList())
+                    errors.append(u"Season no longer exists.")
+                    return False
+            return True
+        else:
+            return False
+
+    def nav_name(self):
+        return 'nav_animes'
+        
+    def redirect(self):
+        if self.mSnum:
+            return redirect('animedbs.views.season', self.mId, self.mSnum)
+        else:
+            return redirect('animedbs.views.anime', self.mId)
+
+    def update(self):
+        series_num = self.mForm.cleaned_data['series_num']
+        full_name = self.mForm.cleaned_data['full_name']
+        total_episodes = self.mForm.cleaned_data['total_episodes']
+        release_year = self.mForm.cleaned_data['release_year']
+        release_month = self.mForm.cleaned_data['release_month']
+        cursor = connection.cursor()
+
+        if self.mSnum:
+            cursor.execute(
+                    '''UPDATE `SEASON` SET `Series_num` = %s, `Full_name` = %s,
+                       `Total_episodes` = %s, `Release_year` = %s,
+                       `Release_month` = %s
+                       WHERE `Part_of` = %s AND `Series_num` = %s;
+                    ''',
+                    [series_num, full_name, total_episodes,
+                        release_year, release_month, self.mId, self.mSnum])
+            self.mSnum = series_num
+        else:
+            cursor.execute(
+                    '''INSERT INTO `SEASON` (`Part_of`, `Series_num`, `Full_name`,
+                       `Total_episodes`, `Release_year`, `Release_month`)
+                        VALUES (%s, %s, %s, %s, %s, %s);
+                    ''',
+                    [self.mId, series_num, full_name, total_episodes,
+                        release_year, release_month])
+        transaction.commit_unless_managed()
+
+    def delete(self):
+        if self.mSnum:
+            cursor = connection.cursor()
+            sql = '''
+            DELETE FROM `SEASON`
+            WHERE `Part_of` = %s AND `Series_num` = %s;
+            '''
+            cursor.execute(sql, [self.mId, self.mSnum])
+            transaction.commit_unless_managed()
+            self.mSnum = None

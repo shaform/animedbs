@@ -1,5 +1,12 @@
 <h2>{{ season.full_name }} - Season {{ season.snum }} of {{ season.anime }}</h2>
 <table>
+{% if anime_id %}
+<tr>
+    <td colspan="2">
+        <a href="{% url animedbs.views.edit_season anime_id season.snum %}">Edit</a>
+    </td>
+</tr>
+{% endif %}
 <tr>
     <td>Total_episodes</td>
     <td>{{ season.episodes }}</td>

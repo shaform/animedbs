@@ -17,6 +17,7 @@ from animedbs.forms import CommentEntity
 from animedbs.forms import AnimeImageEntity
 from animedbs.forms import AnimeCharacterImageEntity
 from animedbs.forms import CharacterEntity
+from animedbs.forms import SeasonEntity
 from django import forms
 from django.template import Template
 
@@ -175,9 +176,9 @@ def comment(request, aid, snum):
     cursor.execute(sql, [user_id, aid, snum])
 
     if cursor.fetchone() is None:
-        return create_entity(request, CommentEntity, [aid, snum, user_id])
+        return create_entity(request, CommentEntity, [int(aid), int(snum), int(user_id)])
     else:
-        return create_entity(request, CommentEntity, [aid, snum, user_id], True)
+        return create_entity(request, CommentEntity, [int(aid), int(snum), int(user_id)], True)
 
 
 @login_required
@@ -437,6 +438,7 @@ def anime(request, aid):
     nav_list = [
             ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
             ['Add Character', reverse('animedbs.views.create_anime_character', args=[aid])],
+            ['Add Season', reverse('animedbs.views.create_season', args=[aid])],
             ]
 
     class DecimalEncoder(json.JSONEncoder):
@@ -500,21 +502,21 @@ def anime_images(request, aid):
         }, context_instance=RequestContext(request))
 
 def edit_anime_image(request, aid):
-    return create_entity(request, AnimeImageEntity, aid)
+    return create_entity(request, AnimeImageEntity, int(aid))
 
 def edit_anime_character(request, aid, cname):
     nav_list = [
             ['Edit Image', reverse('animedbs.views.edit_anime_character_image',
                 args=[aid, cname])],
             ]
-    return create_entity(request, CharacterEntity, [aid, cname], delete=True,
+    return create_entity(request, CharacterEntity, [int(aid), cname], delete=True,
             nav_list = nav_list)
 
 def create_anime_character(request, aid):
-    return create_entity(request, CharacterEntity, [aid, None])
+    return create_entity(request, CharacterEntity, [int(aid), None])
 
 def edit_anime_character_image(request, aid, cname):
-    return create_entity(request, AnimeCharacterImageEntity, [aid, cname])
+    return create_entity(request, AnimeCharacterImageEntity, [int(aid), cname])
 
 @login_required
 def seasons(request):
@@ -617,7 +619,10 @@ def season(request, aid, snum):
         'datetime' : x[3],
         } for x in rows ]
 
-    nav_list = [['Rate it!', reverse('animedbs.views.comment', args=[aid, snum])],]
+    nav_list = [
+            ['Rate it!', reverse('animedbs.views.comment', args=[aid, snum])],
+            ['Edit', reverse('animedbs.views.edit_season', args=[aid, snum])],
+            ]
 
     return render_to_response('season.html', {
         'full_name' : row[0],
@@ -629,6 +634,12 @@ def season(request, aid, snum):
         'comments' : comments,
         'nav_list' : nav_list,
         }, context_instance=RequestContext(request))
+
+def edit_season(request, eid, snum):
+    return create_entity(request, SeasonEntity, [int(eid), int(snum)], delete=True)
+
+def create_season(request, eid):
+    return create_entity(request, SeasonEntity, [int(eid), None])
 
 ## -- Songs -- ##
 @login_required
@@ -685,7 +696,7 @@ def songs(request):
         }, context_instance=RequestContext(request))
 
 def edit_song(request, eid):
-    return create_entity(request, SongEntity, eid, delete=True)
+    return create_entity(request, SongEntity, int(eid), delete=True)
 
 def create_song(request):
     return create_entity(request, SongEntity)
@@ -781,7 +792,7 @@ def create_seiyu(request):
     return create_entity(request, SeiyuEntity)
 
 def edit_seiyu(request, eid):
-    return create_entity(request, SeiyuEntity, eid)
+    return create_entity(request, SeiyuEntity, int(eid))
 
 
 @login_required
