@@ -63,7 +63,7 @@ class SeiyuForm(forms.Form):
 class SeiyuEntity(ObjectEntity):
 
     Form = SeiyuForm
-    Title = 'Seiyu'
+    Title = 'Create Seiyu'
 
     def setId(self, Id):
         cursor = connection.cursor()
@@ -132,7 +132,7 @@ class SongForm(forms.Form):
 class SongEntity(ObjectEntity):
 
     Form = SongForm
-    Title = 'Songs'
+    Title = 'Create Song'
 
     def setChoices(self):
         self.mForm.fields['featured'].choices = self.feature_choices
@@ -409,6 +409,7 @@ class AnimeCharacterImageEntity(ObjectEntity):
             self.initial = { 'address' : t }
 
         self.mCname = Ids[1]
+        self.entity_title = 'Edit Images of %s' % Ids[1]
         super(AnimeCharacterImageEntity, self).setId(Ids[0])
 
     def nav_name(self):
@@ -455,7 +456,7 @@ class CharacterForm(forms.Form):
 class CharacterEntity(ObjectEntity):
 
     Form = CharacterForm
-    Title = 'Character'
+    Title = 'Create Character'
 
     def setChoices(self):
         self.mForm.fields['voiced_by'].choices = self.seiyu_choices
@@ -490,6 +491,7 @@ class CharacterEntity(ObjectEntity):
                     'voiced_by' : row[2],
                     'desc' : row[3],
                     }
+            self.entity_title = row[0]
         super(CharacterEntity, self).setId(Ids[0])
         self.setChoices()
 
@@ -571,7 +573,7 @@ class SeasonForm(forms.Form):
 class SeasonEntity(ObjectEntity):
 
     Form = SeasonForm
-    Title = 'Season'
+    Title = 'Create Season'
 
     def setId(self, Ids):
         self.mSnum = Ids[1]

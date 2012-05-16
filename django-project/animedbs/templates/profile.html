@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block pagetitle %}Welcome{% endblock %}
-{% block header %}<h1>Profile</h1>{% endblock %}
+{% block pagetitle %}{{ request.session.user_name }}'s Profile{% endblock %}
+{% block header %}<h1>{{ request.session.user_name }}'s Profile</h1>{% endblock %}
 {% block content %}
 <form action="." method="post">{% csrf_token %}
     {{ form.as_p }}

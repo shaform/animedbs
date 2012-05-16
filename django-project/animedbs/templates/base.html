@@ -57,10 +57,15 @@
 <div id="snd_nav">
     <ul>
         {% for item in nav_list %}
+        {% if item %}
         {% if item.1 %}
         <li><a href="{{ item.1 }}">{{ item.0 }}</a></li>
         {% else %}
         <li>{{ item.0 }}</li>
+        {% endif %}
+        {% else %}
+    </ul>
+    <ul>
         {% endif %}
         {% endfor %}
     </ul>

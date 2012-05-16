@@ -308,6 +308,7 @@ def animes(request):
     nav_list = [
             ['Anime View', None],
             ['Season View', reverse('animedbs.views.seasons')],
+            None,
             ['Create Anime', reverse('animedbs.views.create_anime')],
             ]
 
@@ -824,13 +825,25 @@ def seiyu(request, sid):
     cursor.execute('SELECT `Title`'
             + ' FROM `SONG` WHERE `Singed_by` = %s;', [sid])
     songs = cursor.fetchall()
+    thead = ['Id',
+            'Name',
+            'Gender',
+            'Birthday',
+            'Description'
+            ]
+    nav_list = [
+            ['Edit', reverse('animedbs.views.edit_seiyu', args=[sid])],
+            ]
     return render_to_response('seiyu.html', {
         'nav_seiyus' : True,
         'row' : row,
         'animes' : animes,
         'characters' : characters,
         'songs' : songs,
+        'table_header' : thead,
+        'nav_list' : nav_list,
         }, context_instance=RequestContext(request))
+
 
 def create_seiyu(request):
     return create_entity(request, SeiyuEntity)

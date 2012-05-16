@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 {% block users %}active{% endblock %}
-{% block pagetitle %}Temp{% endblock %}
+{% block pagetitle %}{{ row.1 }}{% endblock %}
 {% block header %}
-<h1>Seiyu</h1>
+<h1>{{ row.1 }}</h1>
 {% endblock %}
 {% block content %}
-<a href="{% url animedbs.views.edit_seiyu row.0 %}">Edit</a>
 <table>
     <thead>
         <tr>
