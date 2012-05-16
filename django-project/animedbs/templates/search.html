@@ -1,12 +1,12 @@
 {% extends 'table.html' %}
 {% block search_addon %}
 <h1>Search</h1>
-<form action="." method="get">
+<form action="." method="get" class="well form-inline">
     <p>
     {{ form.non_field_errors }}
     {{ form.keyword }}
     {{ form.qtype }}
-    <input type="submit" value="Search" />
+    <input type="submit" value="Search" class="btn" />
     </p>
 </form>
 {% endblock %}

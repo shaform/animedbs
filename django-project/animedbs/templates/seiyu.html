@@ -5,11 +5,11 @@
 <h1>{{ row.1 }}</h1>
 {% endblock %}
 {% block content %}
-<table>
+<table class="table table-bordered">
     <thead>
         <tr>
         {% for col in table_header %}
-            <td>{{ col }}</td>
+            <th>{{ col }}</th>
         {% endfor %}
         </tr>
     </thead>

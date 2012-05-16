@@ -9,6 +9,7 @@ td {
 #index h1 {
     text-align: center;
 }
+
 #index ul {
     list-style-type: none;
     height: 50px;
@@ -32,7 +33,7 @@ td {
     font-size: 21px;
 }
 
-
+/*
 #snd_nav ul {
     list-style-type: none;
     border-left: 1px solid #000;
@@ -43,6 +44,9 @@ td {
     display: inline;
     padding-right: 10px;
 }
+*/
+
+
 #id_qtype {
     width: 150px;
 }

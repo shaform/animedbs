@@ -7,11 +7,7 @@
     <input type="submit" value="Update" class="btn btn-primary" /></p>
 </form>
 <h2>My comments</h2>
-<table>
-    <tbody>
-        {% for cmt in comments %}
-        {% include 'comment_object.html' %}
-        {% endfor %}
-    </tbody>
-</table>
+    {% for cmt in comments %}
+    {% include 'comment_object.html' %}
+    {% endfor %}
 {% endblock %}

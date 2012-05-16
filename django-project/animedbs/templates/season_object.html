@@ -1,28 +1,26 @@
 <h2>{{ season.full_name }} - Season {{ season.snum }} of {{ season.anime }}</h2>
-<table>
 {% if anime_id %}
-<tr>
-    <td colspan="2">
-        <a href="{% url animedbs.views.edit_season anime_id season.snum %}">Edit</a> | 
-        <a href="{% url animedbs.views.comment anime_id season.snum %}">Rate</a>
-    </td>
-</tr>
+<ul class="nav nav-pills">
+    <li><a href="{% url animedbs.views.edit_season anime_id season.snum %}">Edit</a> </li>
+    <li><a href="{% url animedbs.views.comment anime_id season.snum %}">Rate</a></li>
+</ul>
 {% endif %}
+<table class="table table-bordered">
 <tr>
-    <td>Total_episodes</td>
+    <th>Total_episodes</th>
     <td>{{ season.episodes }}</td>
 </tr>
 <tr>
-    <td>Release_year</td>
+    <th>Release_year</th>
     <td>{{ season.year }}</td>
 </tr>
 <tr>
-    <td>Release_month</td>
+    <th>Release_month</th>
     <td>{{ season.month }}</td>
 </tr>
 </table>
 <h3>Comments:</h3>
-<table>
+<table class="table table-bordered">
     <tbody>
         {% for cmt in season.comments %}
         {% include 'comment_object.html' %}

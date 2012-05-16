@@ -1,37 +1,43 @@
+<table class="table table-bordered">
+<tbody>
+
 {% if cmt.commenter %}
 <tr>
-    <td>Commenter</td>
+    <th>Commenter</th>
     <td>{{ cmt.commenter }}</td>
 </tr>
 {% endif %}
 {% if cmt.season %}
 <tr>
-    <td>On</td>
+    <th>On</th>
     <td>{{ cmt.season }}</td>
 </tr>
 {% endif %}
 {% if cmt.anime %}
 <tr>
-    <td>Season</td>
+    <th>Season</th>
     <td>{{ cmt.snum }} of {{ cmt.anime }}</td>
 </tr>
 {% endif %}
 <tr>
-    <td>Rating</td>
+    <th>Rating</th>
     <td>{{ cmt.rating }}</td>
 </tr>
 <tr>
-    <td>Time</td>
+    <th>Time</th>
     <td>{{ cmt.datetime }}</td>
 </tr>
 <tr>
-    <td>Text</td>
+    <th>Text</th>
     <td>{{ cmt.text|linebreaks }}</td>
 </tr>
 {% if request.session.user_id == cmt.commenter_id %}
 <tr>
     <td colspan="2">
-        <a href="{% url animedbs.views.comment cmt.anime_id cmt.snum%}">Edit</a>
+        <a class="btn" href="{% url animedbs.views.comment cmt.anime_id cmt.snum%}">Edit</a>
     </td>
 </tr>
 {% endif %}
+
+</tbody>
+</table>

@@ -6,6 +6,7 @@
 {% if db_debug %} <h2>debug msg: "</h2><pre>{{ db_debug }}</pre> {% endif %}
 {% if multi_table %}
 {% for e in multi_table %}
+<br>
 <h2>{{ e.name }}</h2>
 <div id="table_{{ e.name }}"></div>
 {% endfor %}

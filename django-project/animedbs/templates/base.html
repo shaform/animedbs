@@ -55,17 +55,17 @@
 {% block snd_nav %}
 {% if nav_list %}
 <div id="snd_nav">
-    <ul>
+    <ul class="nav nav-tabs">
         {% for item in nav_list %}
         {% if item %}
         {% if item.1 %}
         <li><a href="{{ item.1 }}">{{ item.0 }}</a></li>
         {% else %}
-        <li>{{ item.0 }}</li>
+        <li class="active"><a href="#">{{ item.0 }}</a></li>
         {% endif %}
         {% else %}
     </ul>
-    <ul>
+    <ul class="nav nav-pills">
         {% endif %}
         {% endfor %}
     </ul>
