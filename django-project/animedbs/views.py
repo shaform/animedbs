@@ -260,7 +260,8 @@ def user(request, user_id):
 def search(request, t=None):
     keyword = request.GET['keyword']
     skeyword = keyword.replace('#', '##').replace('%', '#%').replace('_', '#_')
-    skeyword = '%' + keyword + '%'
+    skeyword = '%' + skeyword + '%'
+    print skeyword
     cursor = connection.cursor()
     sql = '''
     SELECT `Id`, `Name`
