@@ -1,6 +1,7 @@
 {% extends 'table.html' %}
 {% block content %}
 <div id="table_div"></div>
+{% if desc %}{{ desc|linebreaks }}{% endif %}
 {% if images %}
 <h2>Images</h2>
 {% for image in images %}

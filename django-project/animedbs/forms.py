@@ -182,7 +182,7 @@ class SongEntity(ObjectEntity):
         
     def redirect(self):
         if self.mId:
-            return redirect('animedbs.views.edit_song', self.mId)
+            return redirect('animedbs.views.song', self.mId)
         else:
             return redirect('animedbs.views.songs')
 

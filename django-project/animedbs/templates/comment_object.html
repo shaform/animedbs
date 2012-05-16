@@ -26,7 +26,7 @@
 </tr>
 <tr>
     <td>Text</td>
-    <td>{{ cmt.text }}</td>
+    <td>{{ cmt.text|linebreaks }}</td>
 </tr>
 {% if request.session.user_id == cmt.commenter_id %}
 <tr>

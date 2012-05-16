@@ -363,6 +363,15 @@ def anime(request, aid):
     ]
 
     sql = '''
+    SELECT `Description`
+    FROM `ANIME`
+    WHERE `Id` = %s;
+    '''
+    cursor.execute(sql, [aid])
+
+    desc = cursor.fetchone()[0]
+
+    sql = '''
     SELECT `Full_name`, `Total_episodes`, `Release_year`, `Release_month`, `Title`, `Series_num`
     FROM `SEASON`, `ANIME`
     WHERE `Part_of` = %s AND `Id` = `Part_of`
@@ -457,6 +466,7 @@ def anime(request, aid):
         'anime_id' : aid,
         'pagetitle' : row[0],
         'cols' : cols,
+        'desc' : desc,
         'rows' : json.dumps([row], cls=DecimalEncoder),
         'nav_list' : nav_list,
         'seasons' : seasons,
@@ -693,7 +703,7 @@ def songs(request):
 
     rowlinks = []
     for row in rows:
-        rowlinks.append(reverse('animedbs.views.edit_song', args=[row[0]]))
+        rowlinks.append(reverse('animedbs.views.song', args=[row[0]]))
 
     nav_list = [['Create Song', reverse('animedbs.views.create_song')],]
 
@@ -704,7 +714,64 @@ def songs(request):
         'rows' : json.dumps(rows),
         'rowlinks' : json.dumps(rowlinks),
         'nav_list' : nav_list,
-        #'db_debug' : sql,
+        }, context_instance=RequestContext(request))
+
+def song(request, sid):
+    cursor = connection.cursor()
+    sql = '''
+    SELECT `Id`, `Title`, `Seiyu_name`, `Anime_name`, `Anime_series`, `Type`
+    FROM (
+        SELECT
+            `Id`,
+            `Title`,
+            `Singed_by` AS `Seiyu_id`,
+            `Featured_in_aid` AS `Anime_id`,
+            `Featured_in_snum` AS `Anime_series`,
+            `Type`
+        FROM `SONG` WHERE `Id` = %s
+    ) AS t1
+        
+    LEFT JOIN (
+        SELECT `Title` AS `Anime_name`, `Id` AS `Anime_id` FROM `ANIME`
+    ) AS t2 USING (`Anime_id`)
+
+    LEFT JOIN (
+        SELECT `Name` AS `Seiyu_name`, `Id` AS `Seiyu_id` FROM `SEIYU`
+    ) AS t3 USING (`Seiyu_id`);
+    '''
+    cursor.execute(sql, [sid])
+
+    row = cursor.fetchone()
+    if row is None:
+        raise Http404()
+    
+    cols = [
+        ('number', 'Id'),
+        ('string', 'Title'),
+        ('string', 'Singer'),
+        ('string', 'Featured Anime'),
+        ('number', 'Featured Season'),
+        ('string', 'Type'),
+    ]
+
+    sql = '''
+    SELECT `Lyrics`
+    FROM `SONG` WHERE `Id` = %s;
+    '''
+    cursor.execute(sql, [sid])
+
+    lyrics = cursor.fetchone()[0]
+
+    nav_list = [['Edit Song', reverse('animedbs.views.edit_song',
+        args=[sid])],]
+
+    return render_to_response('song.html', {
+        'nav_songs' : True,
+        'pagetitle' : row[1],
+        'cols' : cols,
+        'rows' : json.dumps([row]),
+        'lyrics' : lyrics,
+        'nav_list' : nav_list,
         }, context_instance=RequestContext(request))
 
 def edit_song(request, eid):
@@ -717,14 +784,13 @@ def create_song(request):
 @login_required
 def authors(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM `AUTHOR`;')
+    cursor.execute('SELECT `Id`, `Name` FROM `AUTHOR`;')
 
     rows = cursor.fetchall()
 
     cols = [
         ('number','Id'),
         ('string','Name'),
-        ('string','Description'),
     ]
 
     rowlinks = []
@@ -776,7 +842,7 @@ def edit_author(request, arid):
 @login_required
 def seiyus(request):
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM `SEIYU`;')
+    cursor.execute('SELECT `Id`, `Name`, `Gender`, `Birthday` FROM `SEIYU`;')
 
     rows = cursor.fetchall()
 
@@ -785,7 +851,6 @@ def seiyus(request):
         ('string','Name'),
         ('string','Gender'),
         ('string','Birthday'),
-        ('string','Description'),
     ]
 
     rowlinks = []

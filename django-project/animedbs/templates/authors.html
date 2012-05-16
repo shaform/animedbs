@@ -4,7 +4,7 @@
 {% block content %}
 {% for author in author_list %}
 <h2>{{ author.id }} - {{ author.name }}</h2>
-<p>{{ author.desc }}</p>
+{{ author.desc|linebreaks }}
 <h3>Authored animes:</h3>
 <ul>
     {% for anime in author.anime_list %}
