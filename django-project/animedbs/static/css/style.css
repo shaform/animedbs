@@ -43,3 +43,9 @@ td {
     display: inline;
     padding-right: 10px;
 }
+#id_qtype {
+    width: 150px;
+}
+#id_keyword {
+    width: 400px;
+}

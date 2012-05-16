@@ -1,0 +1,13 @@
+{% extends 'table.html' %}
+{% block search_addon %}
+<h1>Search</h1>
+<form action="." method="get">
+    <p>
+    {{ form.non_field_errors }}
+    {{ form.keyword }}
+    {{ form.qtype }}
+    <input type="submit" value="Search" />
+    </p>
+</form>
+{% endblock %}
+{% block pagetitle %}Search{% endblock %}

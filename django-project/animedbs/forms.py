@@ -52,7 +52,17 @@ class ProfileForm(forms.Form):
     gender = forms.ChoiceField(choices = GENDERS)
 
 class SearchForm(forms.Form):
-    keyword = forms.CharField(max_length=30)
+    keyword = forms.CharField(max_length=30, label='')
+    qtype = forms.ChoiceField(label='', choices = (
+        ('all', 'All'),
+        ('comment', 'Comment Content'),
+        ('anime_title', 'Anime Title'),
+        ('anime_desc', 'Anime Description'),
+        ('seiyu_name', 'Seiyu Name'),
+        ('song_title', 'Song Title'),
+        ('character_name', 'Character Name'),
+        ('author_name', 'Author Name'),
+        ))
 
 class SeiyuForm(forms.Form):
     name = forms.CharField(max_length=30)

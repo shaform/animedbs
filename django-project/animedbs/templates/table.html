@@ -1,17 +1,60 @@
 {% extends 'base.html' %}
-{% block users %}active{% endblock %}
 {% block content %}
+{% block search_addon %}{% endblock %}
+{% if not hide %}
 {% if keyword %} <h2>The result of searching: "{{ keyword }}"</h2> {% endif %}
 {% if db_debug %} <h2>debug msg: "</h2><pre>{{ db_debug }}</pre> {% endif %}
+{% if multi_table %}
+{% for e in multi_table %}
+<h2>{{ e.name }}</h2>
+<div id="table_{{ e.name }}"></div>
+{% endfor %}
+{% else %}
+{% if rows %}
 <div id="table_div"></div>
+{% else %}
+<p>Not Found.</p>
+{% endif %}
+{% endif %}
+{% endif %}
 {% endblock %}
 
 {% block tailscript %}
+{% if not hide %}
     <script type='text/javascript' src='https://www.google.com/jsapi'></script>
     <script type='text/javascript'>
         google.load('visualization', '1', {packages:['table']});
         google.setOnLoadCallback(drawTable);
         function drawTable() {
+            {% if multi_table %}
+            {% for e in multi_table %}
+
+            var data{{ e.name }} = new google.visualization.DataTable();
+            {% for col in e.cols %}
+            data{{ e.name }}.addColumn{{ col|safe }};
+            {% endfor %}
+            data{{ e.name }}.addRows({{ e.rows|safe }})
+            
+            var table{{ e.name }} = new google.visualization.Table($('#table_{{ e.name }}')[0]);
+            table{{ e.name }}.draw(data{{ e.name }});
+
+
+            {% if e.rowlinks %}
+            var rowlinks{{ e.name }} = {{ e.rowlinks|safe }};
+            function selectHandler{{ e.name }}(e)     {   
+                var selection = table{{ e.name }}.getSelection()[0];
+                if (selection.row != null) {
+                    window.location = rowlinks{{ e.name }}[selection.row];
+                }
+            }
+            google.visualization.events.addListener(table{{ e.name }},
+                    'select',
+                    selectHandler{{ e.name }}); 
+            {% endif %}
+            {% endfor %}
+
+            {% else %}
+            {% if rows %}
             var data = new google.visualization.DataTable();
             {% for col in cols %}
                 data.addColumn{{ col|safe }};
@@ -32,7 +75,10 @@
             }
             google.visualization.events.addListener(table, 'select', selectHandler); 
             {% endif %}
+            {% endif %}
+            {% endif %}
         }
     </script>
+{% endif %}
 {% endblock %}
 
