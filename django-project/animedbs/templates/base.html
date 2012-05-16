@@ -38,7 +38,8 @@
 
             <form class="navbar-search pull-right" action="{% url animedbs.views.search %}" method="get">
                 <i class="icon-search icon-white"></i>
-                <input type="text" name="keyword" class="search-query" placeholder="Search">
+                <input type="hidden" name="qtype" value="all" />
+                <input type="text" name="keyword" class="search-query" placeholder="Search" />
             </form>
 
         </div>
