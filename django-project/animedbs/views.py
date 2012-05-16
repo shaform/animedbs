@@ -442,8 +442,8 @@ def anime(request, aid):
     nav_list = [
             ['Edit Anime', reverse('animedbs.views.edit_anime', args=[aid])],
             ['Edit Images', reverse('animedbs.views.edit_anime_image', args=[aid])],
-            ['Add Character', reverse('animedbs.views.create_anime_character', args=[aid])],
-            ['Add Season', reverse('animedbs.views.create_season', args=[aid])],
+            ['Create Character', reverse('animedbs.views.create_anime_character', args=[aid])],
+            ['Create Season', reverse('animedbs.views.create_season', args=[aid])],
             ]
 
     class DecimalEncoder(json.JSONEncoder):
@@ -694,7 +694,7 @@ def songs(request):
     for row in rows:
         rowlinks.append(reverse('animedbs.views.edit_song', args=[row[0]]))
 
-    nav_list = [['new', reverse('animedbs.views.create_song')],]
+    nav_list = [['Create Song', reverse('animedbs.views.create_song')],]
 
     return render_to_response('table.html', {
         'nav_songs' : True,
@@ -791,7 +791,7 @@ def seiyus(request):
     for row in rows:
         rowlinks.append(reverse('animedbs.views.seiyu', args=[row[0]]))
 
-    nav_list = [['new', reverse('animedbs.views.create_seiyu')],]
+    nav_list = [['Create Seiyu', reverse('animedbs.views.create_seiyu')],]
 
     class DateEncoder(json.JSONEncoder):
         def default(self, o):
