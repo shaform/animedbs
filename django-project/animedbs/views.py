@@ -636,6 +636,7 @@ def season(request, aid, snum):
             ]
 
     return render_to_response('season.html', {
+        'nav_animes' : True,
         'full_name' : row[0],
         'snum' : snum,
         'anime' : row[4],
@@ -731,7 +732,7 @@ def authors(request):
         rowlinks.append(reverse('animedbs.views.author', args=[row[0]]))
 
     return render_to_response('table.html', {
-        'nav_author' : True,
+        'nav_authors' : True,
         'pagetitle' : 'Authors',
         'cols' : cols,
         'rows' : json.dumps(rows),
