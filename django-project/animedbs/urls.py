@@ -31,6 +31,5 @@ urlpatterns = patterns('',
         url(r'^song/(\d+)/$', 'animedbs.views.song'),
         url(r'^song/(\d+)/edit/$', 'animedbs.views.edit_song'),
         url(r'^search/$', 'animedbs.views.search'),
-        url(r'^search/(.+)/$', 'animedbs.views.search'),
         url(r'^comment/(\d+)/(\d+)/$', 'animedbs.views.comment'),
 )

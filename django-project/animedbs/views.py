@@ -12,6 +12,7 @@ from django.template import RequestContext
 from django.template import Context
 from animedbs.forms import LoginForm
 from animedbs.forms import ProfileForm
+from animedbs.forms import SearchForm
 from animedbs.forms import SeiyuEntity
 from animedbs.forms import SongEntity
 from animedbs.forms import CommentEntity
@@ -257,34 +258,180 @@ def user(request, user_id):
 ## -- Search -- ##
 @login_required
 @csrf_exempt
-def search(request, t=None):
-    keyword = request.GET['keyword']
-    skeyword = keyword.replace('#', '##').replace('%', '#%').replace('_', '#_')
-    skeyword = '%' + keyword + '%'
-    cursor = connection.cursor()
-    sql = '''
-    SELECT `Id`, `Name`
-    FROM `AUTHOR`
-    WHERE `Name` LIKE %s ESCAPE '#';
-    '''
-    cursor.execute(sql, [skeyword])
+def search(request):
+    qtype = request.GET.get('qtype', None)
+    keyword = request.GET.get('keyword', None)
 
-    cols = [
-        ('number','Id'),
-        ('string','Name'),
-    ]
+    if qtype is None:
+        form = SearchForm(initial={'keyword': keyword})
+    else:
+        form = SearchForm(request.GET)
 
-    rows = cursor.fetchall()
+    if form.is_valid():
+        skeyword = keyword.replace('#', '##').replace('%', '#%').replace('_', '#_')
+        skeyword = '%' + skeyword + '%'
 
-    rowlinks = []
-    for row in rows:
-        rowlinks.append(reverse('animedbs.views.author', args=[row[0]]))
+        cursor = connection.cursor()
 
-    return render_to_response('table.html', {
-        'keyword': keyword,
-        'cols': cols,
-        'rows': json.dumps(rows),
-        'rowlinks' : json.dumps(rowlinks),
+        querys = {
+                'author_name' : {
+                    'sql' : '''
+                    SELECT `Id`, `Id`, `Name`
+                    FROM `AUTHOR`
+                    WHERE `Name` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('number','Id'),
+                        ('string','Name'),
+                        ],
+                    'name' : 'Author',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.author',
+                    },
+                'anime_title' : {
+                    'sql' : '''
+                    SELECT A.`Id`, A.`Id`, A.`Title`, B.`Name`, A.`Web_address`
+                    FROM `ANIME` AS A LEFT JOIN `AUTHOR` AS B ON A.`Authored_by` = B.`Id`
+                    WHERE `Title` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('number','Id'),
+                        ('string','Title'),
+                        ('string','Author'),
+                        ('string','Web Address'),
+                        ],
+                    'name' : 'AnimeTitle',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.anime',
+                    },
+                'anime_desc' : {
+                    'sql' : '''
+                    SELECT A.`Id`, A.`Id`, A.`Title`, A.`Description`
+                    FROM `ANIME` AS A
+                    WHERE `Description` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('number','Id'),
+                        ('string','Title'),
+                        ('string','Description'),
+                        ],
+                    'name' : 'AnimeDescription',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.anime',
+                    },
+                'seiyu_name' : {
+                    'sql' : '''
+                    SELECT `Id`, `Id`, `Name`, `Gender` FROM `SEIYU`
+                    WHERE `Name` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('number','Id'),
+                        ('string','Name'),
+                        ('string','Gender'),
+                        ],
+                    'name' : 'SeiyuName',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.seiyu',
+                    },
+                'song_title' : {
+                    'sql' : '''
+                    SELECT A.`Id`, A.`Id`, A.`Title`, C.`Name`,
+                    B.`Title`, A.`Featured_in_snum`, A.`Type`
+                    FROM `SONG` AS A, `ANIME` AS B, `SEIYU` AS C
+                    WHERE A.`Featured_in_aid` = B.`Id`
+                    AND A.`Singed_by` = C.`Id`
+                    AND A.`Title` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('number','Id'),
+                        ('string','Title'),
+                        ('string', 'Singer'),
+                        ('string', 'Featured Anime'),
+                        ('number', 'Featured Season'),
+                        ('string', 'Type'),
+                        ],
+                    'name' : 'SongTitle',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.song',
+                    },
+                'comment' : {
+                    'sql' : '''
+                    SELECT B.`Id`, A.`Commentee_season`,
+                    B.`Title`, A.`Commentee_season`, C.`Nickname`, A.`Rating`, A.`Text`
+                    FROM `COMMENTS_ON` AS A, `ANIME` AS B, `USER` AS C
+                    WHERE A.`Commentee_anime` = B.`Id`
+                    AND A.`Commenter` = C.`Id`
+                    AND A.`Text` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('string', 'Anime Title'),
+                        ('number', 'Season'),
+                        ('string', 'Commenter'),
+                        ('number', 'Rating'),
+                        ('string', 'Text'),
+                        ],
+                    'name' : 'CommentContent',
+                    'spnum' : 2,
+                    'link' : 'animedbs.views.season',
+                    },
+                'character_name' : {
+                    'sql' : '''
+                    SELECT B.`Id` ,
+                    A.`Name`, A.`Gender`, B.`Name`
+                    FROM `CHARACTER` AS A, `SEIYU` AS B
+                    WHERE B.`Id` = `Voiced_by`
+                    AND A.`Name` LIKE %s ESCAPE '#';
+                    ''',
+                    'cols' : [
+                        ('string', 'Name'),
+                        ('string', 'Gender'),
+                        ('string', 'Voiced By'),
+                        ],
+                    'name' : 'CharacterName',
+                    'spnum' : 1,
+                    'link' : 'animedbs.views.anime',
+                    },
+                }
+
+        sqls = {
+                'comment' : '''
+                ''',
+                'character_name' : '''
+                ''',
+                }
+        multi_table = []
+        for key in querys.keys():
+            if qtype == 'all' or qtype == key:
+                entry = querys[key]
+                cursor.execute(entry['sql'], [skeyword])
+                rows = cursor.fetchall()
+
+                if len(rows) == 0:
+                    continue
+
+                rowlinks = []
+                for row in rows:
+                    rowlinks.append(reverse(entry['link'], args=row[:entry['spnum']]))
+
+                rows = [ x[entry['spnum']:] for x in rows ]
+
+                table = {
+                        'cols': entry['cols'],
+                        'rows': json.dumps(rows),
+                        'rowlinks': json.dumps(rowlinks),
+                        'name': entry['name'],
+                        }
+                multi_table.append(table)
+
+        return render_to_response('search.html', {
+            'keyword': keyword,
+            'multi_table': multi_table,
+            'form': form,
+        }, context_instance=RequestContext(request))
+
+    return render_to_response('search.html', {
+        'form': form,
+        'hide': True,
     }, context_instance=RequestContext(request))
 
 ## -- Animes -- ##
@@ -904,6 +1051,11 @@ def seiyu(request, sid):
             + ' WHERE `Voiced_by` = %s'
             + ' AND `Present_in` = `ANIME`.`Id`;', [sid])
     animes = cursor.fetchall()
+    cursor.execute('SELECT `ANIME`.`Title`'
+            + ' FROM `SONG`, `ANIME`'
+            + ' WHERE `Singed_by` = %s'
+            + ' AND `Featured_in_aid` = `ANIME`.`Id`;', [sid])
+    animes = list(set(list(animes) + list(cursor.fetchall())))
     cursor.execute('SELECT `Name`'
             + ' FROM `CHARACTER` WHERE `Voiced_by` = %s;', [sid])
     characters = cursor.fetchall()
