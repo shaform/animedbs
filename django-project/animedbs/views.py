@@ -1051,6 +1051,11 @@ def seiyu(request, sid):
             + ' WHERE `Voiced_by` = %s'
             + ' AND `Present_in` = `ANIME`.`Id`;', [sid])
     animes = cursor.fetchall()
+    cursor.execute('SELECT `ANIME`.`Title`'
+            + ' FROM `SONG`, `ANIME`'
+            + ' WHERE `Singed_by` = %s'
+            + ' AND `Featured_in_aid` = `ANIME`.`Id`;', [sid])
+    animes = list(set(list(animes) + list(cursor.fetchall())))
     cursor.execute('SELECT `Name`'
             + ' FROM `CHARACTER` WHERE `Voiced_by` = %s;', [sid])
     characters = cursor.fetchall()
