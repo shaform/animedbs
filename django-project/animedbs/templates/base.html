@@ -37,7 +37,6 @@
             </div>
 
             <form class="navbar-search pull-right" action="{% url animedbs.views.search %}" method="get">
-                {% csrf_token %}
                 <i class="icon-search icon-white"></i>
                 <input type="text" name="keyword" class="search-query" placeholder="Search">
             </form>

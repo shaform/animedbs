@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import json
+from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.db import connection, transaction
 from django.http import HttpResponse
@@ -255,18 +256,36 @@ def user(request, user_id):
 
 ## -- Search -- ##
 @login_required
-def search(request):
-    cursor = connection.cursor()
-    cursor.execute('SELECT `Id`, `Email`, `Nickname`, `Gender`'
-            + ' FROM `USER`;')
+@csrf_exempt
+def search(request, t=None):
     keyword = request.GET['keyword']
+    skeyword = keyword.replace('#', '##').replace('%', '#%').replace('_', '#_')
+    skeyword = '%' + keyword + '%'
+    cursor = connection.cursor()
+    sql = '''
+    SELECT `Id`, `Name`
+    FROM `AUTHOR`
+    WHERE `Name` LIKE %s ESCAPE '#';
+    '''
+    cursor.execute(sql, [skeyword])
+
+    cols = [
+        ('number','Id'),
+        ('string','Name'),
+    ]
+
+    rows = cursor.fetchall()
+
+    rowlinks = []
+    for row in rows:
+        rowlinks.append(reverse('animedbs.views.author', args=[row[0]]))
+
     return render_to_response('table.html', {
         'keyword': keyword,
-        'cols': [('number','ID'),('string', 'Email'),('string', 'Name'),
-                ('string', 'Gender')],
-        'rows': json.dumps(cursor.fetchall()),
+        'cols': cols,
+        'rows': json.dumps(rows),
+        'rowlinks' : json.dumps(rowlinks),
     }, context_instance=RequestContext(request))
-
 
 ## -- Animes -- ##
 @login_required

@@ -1,0 +1,8 @@
+{% extends 'table.html' %}
+{% block content %}
+<div id="table_div"></div>
+{% if lyrics %}
+<h2>Lyrics</h2>
+{{ lyrics|linebreaks }}
+{% endif %}
+{% endblock %}
